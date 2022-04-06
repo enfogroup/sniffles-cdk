@@ -1,0 +1,45 @@
+{
+  "name": "@enfo/sniffles",
+  "version": "0.0.1",
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
+  "author": {
+    "name": "Urban Pettersson"
+  },
+  "scripts": {
+    "prepublishOnly": "npx pinst --disable",
+    "postpublish": "npx pinst --enable",
+    "postinstall": "npx husky install",
+    "build": "tsc",
+    "watch": "tsc -w",
+    "clean": "rm -f lib/*.js lib/*.d.ts test/*.js test/*.d.ts",
+    "test": "npm run clean && jest --runInBand",
+    "lint": "npx eslint --ext .ts .",
+    "lint:fix": "npx eslint --fix --ext .ts ."
+  },
+  "devDependencies": {
+    "@aws-cdk/assert": "^2.3.0",
+    "@commitlint/cli": "^16.0.1",
+    "@commitlint/config-conventional": "^16.0.0",
+    "@types/jest": "^27.4.0",
+    "@types/node": "^17.0.7",
+    "@typescript-eslint/eslint-plugin": "^5.8.1",
+    "@typescript-eslint/parser": "^5.8.1",
+    "aws-cdk": "^2.3.0",
+    "aws-cdk-lib": "^2.3.0",
+    "constructs": "^10.0.23",
+    "eslint": "^8.6.0",
+    "eslint-config-standard": "^16.0.3",
+    "eslint-plugin-import": "^2.25.4",
+    "eslint-plugin-node": "^11.1.0",
+    "eslint-plugin-promise": "^6.0.0",
+    "husky": "^7.0.4",
+    "jest": "^27.4.5",
+    "pinst": "^3.0.0",
+    "ts-jest": "^27.1.2",
+    "typescript": "^4.5.4"
+  },
+  "dependencies": {
+    "@enfo/aws-cdkompliance": "^0.1.0"
+  }
+}
