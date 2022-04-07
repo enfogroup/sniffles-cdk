@@ -1,3 +1,5 @@
+import { join } from 'path'
+
 import { NodejsFunction } from '@enfo/aws-cdkompliance'
 
 import { Construct } from 'constructs'
@@ -8,6 +10,7 @@ import { PolicyDocument, PolicyStatement, Role, ServicePrincipal } from 'aws-cdk
 
 export interface SnifflesProps {
   logGroupPatterns: string[]
+  kinesisStream?: Stream
 }
 
 interface SetupSubscriberLambdaProps {
@@ -22,7 +25,7 @@ export class Sniffles extends Construct {
     super(scope, id)
 
     const logGroupPatternsParameter = this.setupLogGroupPatterns(props.logGroupPatterns)
-    const kinesisStream = this.setupKinesisStream()
+    const kinesisStream = this.setupKinesisStream(props.kinesisStream)
     const role = this.setupRoleForCloudWatch(kinesisStream)
     this.setupSubscriberLambda({
       kinesisArn: kinesisStream.streamArn,
@@ -39,7 +42,10 @@ export class Sniffles extends Construct {
     })
   }
 
-  private setupKinesisStream (): Stream {
+  private setupKinesisStream (existingStream?: Stream): Stream {
+    if (existingStream) {
+      return existingStream
+    }
     return new Stream(this, 'Stream', {
       shardCount: 1,
       retentionPeriod: Duration.hours(24)
@@ -94,7 +100,7 @@ export class Sniffles extends Construct {
       }
     })
     return new NodejsFunction(this, 'SubscriberLambda', {
-      entry: 'lambdas/subscriber/handler.ts',
+      entry: join(__dirname, 'lambdas/subscriber/handler.ts'),
       handler: 'handler',
       bundling: {
         minify: true
