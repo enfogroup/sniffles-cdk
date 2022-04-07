@@ -1,1 +1,1 @@
-export { ExampleConstruct, ExampleConstructProps, applyBucketSettings } from './example'
+export { Sniffles, SnifflesProps } from './sniffles'
