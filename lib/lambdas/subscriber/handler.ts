@@ -1,4 +1,4 @@
-import * as CloudWatchLogs from 'aws-sdk/clients/cloudwatchlogs'
+import CloudWatchLogs from 'aws-sdk/clients/cloudwatchlogs'
 import { SSMCache } from '@enfo/aws-secrets'
 import { parseEnvString, parseVariables, VariableType } from '@enfo/env-vars'
 
@@ -29,7 +29,7 @@ const { kinesisArn, patternsName, cloudWatchRole } = parseVariables<{
       required: true
     },
     {
-      name: 'pattersName',
+      name: 'patternsName',
       type: VariableType.STRING,
       required: true
     },

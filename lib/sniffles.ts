@@ -102,6 +102,8 @@ export class Sniffles extends Construct {
     return new NodejsFunction(this, 'SubscriberLambda', {
       entry: join(__dirname, 'lambdas/subscriber/handler.ts'),
       handler: 'handler',
+      memorySize: 128,
+      timeout: Duration.seconds(900),
       bundling: {
         minify: true,
         externalModules: ['aws-sdk'],
