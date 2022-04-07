@@ -7,6 +7,7 @@ import { Stream } from 'aws-cdk-lib/aws-kinesis'
 import { Duration } from 'aws-cdk-lib'
 import { StringListParameter } from 'aws-cdk-lib/aws-ssm'
 import { PolicyDocument, PolicyStatement, Role, ServicePrincipal } from 'aws-cdk-lib/aws-iam'
+import { RetentionDays } from 'aws-cdk-lib/aws-logs'
 
 export interface SnifflesProps {
   logGroupPatterns: string[]
@@ -105,6 +106,7 @@ export class Sniffles extends Construct {
       handler: 'handler',
       memorySize: 128,
       timeout: Duration.seconds(900),
+      logRetention: RetentionDays.ONE_YEAR,
       bundling: {
         minify: true,
         externalModules: ['aws-sdk'],
