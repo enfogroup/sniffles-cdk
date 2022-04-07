@@ -103,7 +103,9 @@ export class Sniffles extends Construct {
       entry: join(__dirname, 'lambdas/subscriber/handler.ts'),
       handler: 'handler',
       bundling: {
-        minify: true
+        minify: true,
+        externalModules: ['aws-sdk'],
+        sourceMap: false
       },
       environment: {
         ...props
