@@ -4,7 +4,7 @@ import { NodejsFunction } from '@enfo/aws-cdkompliance'
 
 import { Construct } from 'constructs'
 import { Stream } from 'aws-cdk-lib/aws-kinesis'
-import { Duration } from 'aws-cdk-lib'
+import { Duration, Stack } from 'aws-cdk-lib'
 import { StringListParameter } from 'aws-cdk-lib/aws-ssm'
 import { PolicyStatement, Role, ServicePrincipal } from 'aws-cdk-lib/aws-iam'
 import { RetentionDays } from 'aws-cdk-lib/aws-logs'
@@ -93,7 +93,7 @@ export class Sniffles extends Construct {
         'logs:PutSubscriptionFilter'
       ],
       resources: [
-        '*' // FIXME, narrow down
+        `arn:aws:logs:*:${Stack.of(this).account}:log-group:*`
       ]
     }))
     lambda.addToRolePolicy(new PolicyStatement({
