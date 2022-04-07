@@ -12,7 +12,8 @@ export interface SnifflesProps {
 
 interface SetupSubscriberLambdaProps {
   kinesisArn: string
-  logGroupsParameter: string
+  pattersName: string
+  patternsArn: string
   cloudWatchRole: string
 }
 
@@ -26,16 +27,17 @@ export class Sniffles extends Construct {
     kinesisStream.grantWrite(role)
     this.setupSubscriberLambda({
       kinesisArn: kinesisStream.streamArn,
-      logGroupsParameter: logGroupPatternsParameter,
+      pattersName: logGroupPatternsParameter.parameterName,
+      patternsArn: logGroupPatternsParameter.parameterArn,
       cloudWatchRole: role.roleArn
     })
   }
 
-  private setupLogGroupPatterns (patterns: string[]): string {
+  private setupLogGroupPatterns (patterns: string[]): StringListParameter {
     return new StringListParameter(this, 'LogGroupPatterns', {
       stringListValue: patterns,
       description: 'Whitelisted log group patterns for Sniffles. Log groups matching the pattern will be subscribed for potential alarms.'
-    }).parameterName
+    })
   }
 
   private setupKinesisStream (): Stream {
@@ -47,7 +49,7 @@ export class Sniffles extends Construct {
 
   private setupRoleForCloudWatch (): Role {
     return new Role(this, 'CloudWatchRole', {
-      assumedBy: new ServicePrincipal('logs.amazon.com')
+      assumedBy: new ServicePrincipal('logs.amazonaws.com')
     })
   }
 
@@ -75,7 +77,7 @@ export class Sniffles extends Construct {
         'ssm:GetParameter'
       ],
       resources: [
-        props.logGroupsParameter
+        props.patternsArn
       ]
     })
     const role = new Role(this, 'SubscriberLambdaRole', {
@@ -91,7 +93,7 @@ export class Sniffles extends Construct {
       }
     })
     return new NodejsFunction(this, 'SubscriberLambda', {
-      entry: './lambdas/subscriber/handler.ts',
+      entry: '/lambdas/subscriber/handler.ts',
       handler: 'handler',
       bundling: {
         minify: true
