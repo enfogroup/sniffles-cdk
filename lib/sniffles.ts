@@ -21,14 +21,15 @@ interface SetupSubscriberLambdaProps {
 }
 
 export class Sniffles extends Construct {
+  readonly kinesisStream: Stream
   constructor (scope: Construct, id: string, props: SnifflesProps) {
     super(scope, id)
 
     const logGroupPatternsParameter = this.setupLogGroupPatterns(props.logGroupPatterns)
-    const kinesisStream = this.setupKinesisStream(props.kinesisStream)
-    const role = this.setupRoleForCloudWatch(kinesisStream)
+    this.kinesisStream = this.setupKinesisStream(props.kinesisStream)
+    const role = this.setupRoleForCloudWatch(this.kinesisStream)
     this.setupSubscriberLambda({
-      kinesisArn: kinesisStream.streamArn,
+      kinesisArn: this.kinesisStream.streamArn,
       patternsName: logGroupPatternsParameter.parameterName,
       patternsArn: logGroupPatternsParameter.parameterArn,
       cloudWatchRole: role.roleArn
