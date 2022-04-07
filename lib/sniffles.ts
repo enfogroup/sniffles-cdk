@@ -15,7 +15,7 @@ export interface SnifflesProps {
 
 interface SetupSubscriberLambdaProps {
   kinesisArn: string
-  pattersName: string
+  patternsName: string
   patternsArn: string
   cloudWatchRole: string
 }
@@ -29,7 +29,7 @@ export class Sniffles extends Construct {
     const role = this.setupRoleForCloudWatch(kinesisStream)
     this.setupSubscriberLambda({
       kinesisArn: kinesisStream.streamArn,
-      pattersName: logGroupPatternsParameter.parameterName,
+      patternsName: logGroupPatternsParameter.parameterName,
       patternsArn: logGroupPatternsParameter.parameterArn,
       cloudWatchRole: role.roleArn
     })
