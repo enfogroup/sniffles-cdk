@@ -23,8 +23,7 @@ export class Sniffles extends Construct {
 
     const logGroupPatternsParameter = this.setupLogGroupPatterns(props.logGroupPatterns)
     const kinesisStream = this.setupKinesisStream()
-    const role = this.setupRoleForCloudWatch()
-    kinesisStream.grantWrite(role)
+    const role = this.setupRoleForCloudWatch(kinesisStream)
     this.setupSubscriberLambda({
       kinesisArn: kinesisStream.streamArn,
       pattersName: logGroupPatternsParameter.parameterName,
@@ -47,10 +46,12 @@ export class Sniffles extends Construct {
     })
   }
 
-  private setupRoleForCloudWatch (): Role {
-    return new Role(this, 'CloudWatchRole', {
+  private setupRoleForCloudWatch (kinesisStream: Stream): Role {
+    const role = new Role(this, 'CloudWatchRole', {
       assumedBy: new ServicePrincipal('logs.amazonaws.com')
     })
+    kinesisStream.grantWrite(role)
+    return role
   }
 
   private setupSubscriberLambda (props: SetupSubscriberLambdaProps): NodejsFunction {
@@ -93,7 +94,7 @@ export class Sniffles extends Construct {
       }
     })
     return new NodejsFunction(this, 'SubscriberLambda', {
-      entry: '/lambdas/subscriber/handler.ts',
+      entry: 'lambdas/subscriber/handler.ts',
       handler: 'handler',
       bundling: {
         minify: true
