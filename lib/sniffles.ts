@@ -64,7 +64,7 @@ export class Sniffles extends Construct {
 
   private setupSubscriberLambda (props: SetupSubscriberLambdaProps): NodejsFunction {
     const lambda = new NodejsFunction(this, 'SubscriberLambda', {
-      entry: join(__dirname, 'lambdas/subscriber/handler.ts'),
+      entry: join(__dirname, 'subscriberLambda.ts'),
       handler: 'handler',
       memorySize: 128,
       timeout: Duration.seconds(900),
