@@ -3,7 +3,6 @@ import { SSMCache } from '@enfo/aws-secrets'
 import { parseEnvString, parseVariables, VariableType } from '@enfo/env-vars'
 
 import tap from 'ramda/src/tap'
-import split from 'ramda/src/split'
 import map from 'ramda/src/map'
 import trim from 'ramda/src/trim'
 import pipe from 'ramda/src/pipe'
@@ -42,8 +41,7 @@ const { kinesisArn, patternsName, cloudWatchRole } = parseVariables<{
 })
 
 const getPatterns = (): Promise<string[]> =>
-  ssmCache.getParameter({ Name: patternsName })
-    .then(split(','))
+  ssmCache.getStringListParameter({ Name: patternsName })
     .then(map(trim))
     .then(tap(console.log))
 const toRegExp = (str: string) => new RegExp(str)
