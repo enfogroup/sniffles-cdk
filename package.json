@@ -44,7 +44,6 @@
     "typescript": "^4.5.4"
   },
   "dependencies": {
-    "@enfo/aws-cdkompliance": "^0.1.0",
     "@enfo/aws-secrets": "^2.1.0",
     "@enfo/env-vars": "^1.0.0",
     "aws-lambda": "^1.0.7",
