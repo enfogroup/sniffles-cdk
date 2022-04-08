@@ -157,7 +157,7 @@ export class Sniffles extends Construct {
       environment: {
         accountId: Stack.of(this).account,
         errorMessage: 'oh no',
-        whitelistName: props.patternsParameter.parameterName,
+        patternsName: props.patternsParameter.parameterName,
         topicArn: props.snsTopic.topicArn
       }
     })
