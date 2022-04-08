@@ -1,7 +1,5 @@
 import { join } from 'path'
 
-import { Key, NodejsFunction, Topic as CompliantTopic } from '@enfo/aws-cdkompliance'
-
 import { Construct } from 'constructs'
 import { Stream } from 'aws-cdk-lib/aws-kinesis'
 import { Duration, Stack } from 'aws-cdk-lib'
@@ -12,13 +10,14 @@ import { StartingPosition } from 'aws-cdk-lib/aws-lambda'
 import { Topic } from 'aws-cdk-lib/aws-sns'
 import { Alarm, AlarmProps, ComparisonOperator, Metric, TreatMissingData } from 'aws-cdk-lib/aws-cloudwatch'
 import { SnsAction } from 'aws-cdk-lib/aws-cloudwatch-actions'
+import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs'
 
 export interface SnifflesProps {
   logGroupPatterns: string[]
-  kinesisStream?: Stream
-  opsGenieSnsTopic?: Topic
-  cloudWatchSnsTopic?: Topic
   errorPatterns: string[]
+  stream?: Stream
+  opsGenieTopic?: Topic
+  cloudWatchTopic?: Topic
 }
 
 interface SetupSubscriberLambdaProps {
@@ -41,16 +40,19 @@ interface SetupLambdaAlarmsProps {
 
 export class Sniffles extends Construct {
   readonly kinesisStream: Stream
-  readonly snsTopic: Topic
+  readonly opsGenieTopic: Topic
+  readonly cloudWatchTopic: Topic
   constructor (scope: Construct, id: string, props: SnifflesProps) {
     super(scope, id)
 
     const logGroupPatternsParameter = this.setupLogGroupPatterns(props.logGroupPatterns)
     const errorPatternsParameter = this.setupErrorPatterns(props.errorPatterns)
 
-    this.kinesisStream = this.setupKinesisStream(props.kinesisStream)
+    this.kinesisStream = this.setupKinesisStream(props.stream)
     const role = this.setupRoleForCloudWatch(this.kinesisStream)
-    this.snsTopic = this.setupSnsTopic(props.opsGenieSnsTopic)
+
+    this.opsGenieTopic = this.setupSnsTopic('OpsGenieTopic', props.opsGenieTopic)
+    this.cloudWatchTopic = this.setupSnsTopic('CloudWatchTopic', props.cloudWatchTopic)
 
     const subscriberLambda = this.setupSubscriberLambda({
       kinesisArn: this.kinesisStream.streamArn,
@@ -59,18 +61,18 @@ export class Sniffles extends Construct {
     })
     this.setupLambdaMetricAlarms({
       lambda: subscriberLambda,
-      topic: this.snsTopic, // FIXME
+      topic: this.opsGenieTopic,
       idPrefix: 'Subscriber'
     })
 
     const coreLambda = this.setupCoreLambda({
       kinesisStream: this.kinesisStream,
       patternsParameter: errorPatternsParameter,
-      snsTopic: this.snsTopic
+      snsTopic: this.opsGenieTopic
     })
     this.setupLambdaMetricAlarms({
       lambda: coreLambda,
-      topic: this.snsTopic, // FIXME
+      topic: this.opsGenieTopic,
       idPrefix: 'Core'
     })
   }
@@ -107,13 +109,11 @@ export class Sniffles extends Construct {
     return role
   }
 
-  private setupSnsTopic (existingTopic?: Topic): Topic {
+  private setupSnsTopic (id: string, existingTopic?: Topic): Topic {
     if (existingTopic) {
       return existingTopic
     }
-    return new CompliantTopic(this, 'Topic', {
-      masterKey: new Key(this, 'SnsKey')
-    })
+    return new Topic(this, id, {})
   }
 
   private setupSubscriberLambda (props: SetupSubscriberLambdaProps): NodejsFunction {
