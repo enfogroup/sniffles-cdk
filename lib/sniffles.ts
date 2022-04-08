@@ -12,11 +12,37 @@ import { Alarm, AlarmProps, ComparisonOperator, Metric, TreatMissingData } from 
 import { SnsAction } from 'aws-cdk-lib/aws-cloudwatch-actions'
 import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs'
 
+/**
+ * Properties needed to create a new Sniffles instance
+ */
 export interface SnifflesProps {
-  logGroupPatterns: string[]
-  errorPatterns: string[]
+  /**
+   * Regular expressions which the subscription lambda should use to find log groups
+   * For example "^/aws/lambda/.*-prod.*" would match log groups with "prod" in their names
+   * Defaults to "^$" (no matches)
+   */
+  logGroupPatterns?: string[]
+  /**
+   * Log lines which core lambda should use to forward to OpsGenie.
+   * For example '{ .level = 'error' }' would match logged rows with key "level" and value "error"
+   * Another example could be "ERROR" which would match logged rows with "ERROR" in them
+   * Defaults to ".*" (match everything)
+   */
+  errorPatterns?: string[]
+  /**
+   * Optional Kinesis stream. Will be used to subscribe all matches from logGroupPatterns
+   * If no stream is supplied one will be created
+   */
   stream?: Stream
+  /**
+   * Optional topic which core lambda will write to when it finds matches
+   * If no topic is supplied one will be created
+   */
   opsGenieTopic?: Topic
+  /**
+   * Optional topic used to send alarms to when internal Sniffles lambdas encounter issues
+   * If no topic is supplied one will be created
+   */
   cloudWatchTopic?: Topic
 }
 
@@ -38,9 +64,23 @@ interface SetupLambdaAlarmsProps {
   idPrefix: string
 }
 
+/**
+ * Sniffles is a self contained solution for getting log based alarms to destinations of your choosing
+ * An automatic Log subscriber will subscribe log groups to a Kinesis stream while another lambda will evaluate if a log row should raise an alarm or not
+ * Check the README for more information!
+ */
 export class Sniffles extends Construct {
+  /**
+   * Kinesis stream used by Sniffles to handle all logs
+   */
   readonly kinesisStream: Stream
+  /**
+   * Topic which all log alarms will be pushed to
+   */
   readonly opsGenieTopic: Topic
+  /**
+   * Topic which all internal Sniffles logic alarms will be pushed to
+   */
   readonly cloudWatchTopic: Topic
   constructor (scope: Construct, id: string, props: SnifflesProps) {
     super(scope, id)
@@ -77,14 +117,14 @@ export class Sniffles extends Construct {
     })
   }
 
-  private setupLogGroupPatterns (patterns: string[]): StringListParameter {
+  private setupLogGroupPatterns (patterns: string[] = ['^$']): StringListParameter {
     return new StringListParameter(this, 'LogGroupPatterns', {
       stringListValue: patterns,
       description: 'Whitelisted log group patterns for Sniffles. Log groups matching the pattern will be subscribed for potential alarms.'
     })
   }
 
-  private setupErrorPatterns (patterns: string[]): StringListParameter {
+  private setupErrorPatterns (patterns: string[] = ['.*']): StringListParameter {
     return new StringListParameter(this, 'ErrorPatterns', {
       stringListValue: patterns,
       description: 'List of regular expressions used to match errors from log groups. For example "{.level = "error}"'
