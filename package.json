@@ -44,7 +44,7 @@
     "typescript": "^4.5.4"
   },
   "dependencies": {
-    "@enfo/aws-secrets": "^2.1.0",
+    "@enfo/aws-secrets": "^2.2.0",
     "@enfo/env-vars": "^1.0.0",
     "aws-lambda": "^1.0.7",
     "fp-ts": "^2.11.9",
