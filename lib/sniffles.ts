@@ -242,8 +242,6 @@ export class Sniffles extends Construct {
         sourceMap: false
       },
       environment: {
-        accountId: Stack.of(this).account,
-        errorMessage: 'oh no',
         patternsName: props.patternsParameter.parameterName,
         topicArn: props.snsTopic.topicArn
       },

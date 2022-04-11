@@ -20,19 +20,16 @@ import ifElse from 'ramda/src/ifElse'
 import includes from 'ramda/src/includes'
 import isEmpty from 'ramda/src/isEmpty'
 import length from 'ramda/src/length'
-import lensProp from 'ramda/src/lensProp'
 import map from 'ramda/src/map'
 import match from 'ramda/src/match'
 import path from 'ramda/src/path'
 import pathSatisfies from 'ramda/src/pathSatisfies'
 import pipe from 'ramda/src/pipe'
 import prop from 'ramda/src/prop'
-import set from 'ramda/src/set'
 import split from 'ramda/src/split'
 import startsWith from 'ramda/src/startsWith'
 import T from 'ramda/src/T'
 import tail from 'ramda/src/tail'
-import take from 'ramda/src/take'
 import tap from 'ramda/src/tap'
 import test from 'ramda/src/test'
 import toString from 'ramda/src/toString'
@@ -56,44 +53,11 @@ interface LogMessage {
 }
 type LogMessages = ReadonlyArray<LogMessage>
 
-interface PublishInput {
-  /**
-   * Subject to publish to the SNS Topic
-   */
-  subject: string
-  /**
-   * Message to publish to the SNS Topic
-   */
-  message: string
-  /**
-   * Optional attributes to publish for a message. For OpsGenie make sure to include entry 'eventType: { DataType: "String", StringValue: "create" }'
-   */
-  attributes?: SNS.MessageAttributeMap
-}
-
-export interface TransformerLambdaInput {
-  logMessage: LogMessage
-  accountId: string
-}
-export type TransformerLambdaOutput = PublishInput
-
-const { accountId, errorMessage, patternsName, topicArn } = parseVariables<{
-  accountId: string,
-  errorMessage: string,
+const { patternsName, topicArn } = parseVariables<{
   patternsName: string,
   topicArn: string
 }>({
   variables: [
-    {
-      name: 'accountId',
-      type: VariableType.STRING,
-      required: true
-    },
-    {
-      name: 'errorMessage',
-      type: VariableType.STRING,
-      required: true
-    },
     {
       name: 'patternsName',
       type: VariableType.STRING,
@@ -149,23 +113,11 @@ const parseRecord = pipe<any, string, Buffer, Buffer, string, LogMessage, LogMes
   JSON.parse,
   (m: LogMessage) => map((logEvent: LogEvent) => ({ ...m, logEvents: [logEvent] }))(m.logEvents)
 )
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const parseMessage = (log: any) => {
-  try {
-    return JSON.parse(log.logEvents[0].message).message
-  } catch (_) {
-    return ''
-  }
-}
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const publishLog = (log: any) =>
+
+const publishLog = (log: object) =>
   sns.publish({
     TopicArn: topicArn,
-    Message: JSON.stringify(log),
-    Subject: take(100, `${accountId} ${log.logGroup} ${parseMessage(log) || errorMessage}`),
-    MessageAttributes: {
-      eventType: { DataType: 'String', StringValue: 'create' }
-    }
+    Message: JSON.stringify(log)
   }).promise()
 
 export const
@@ -192,18 +144,14 @@ export const getLogId = pipe<any, string, string[], string[], string>(
   drop(1),
   head
 )
-export const addLogLink = (m: LogMessage) =>
-  set(lensProp('logLink'), `https://${awsRegion}.console.aws.amazon.com/cloudwatch/home?region=${awsRegion}#logsV2:log-groups/log-group/${m.logGroup.replace(/\//g, '$252F')}/log-events$3FfilterPattern$3D$2522${getLogId(m)}$2522`, m)
-
 export const handler = (event: KinesisStreamEvent) =>
   getWhitelist()
     // .then(tap(console.log))
     .then(map(toWhitelistFn))
-    .then((whitelistFns) => pipe<any, KinesisStreamRecord[], LogMessages, LogMessages, LogMessages, LogMessages, Promise<SNS.Types.PublishResponse>[], Promise<SNS.Types.PublishResponse[]>>(
+    .then((whitelistFns) => pipe<any, KinesisStreamRecord[], LogMessages, LogMessages, LogMessages, Promise<SNS.Types.PublishResponse>[], Promise<SNS.Types.PublishResponse[]>>(
       prop<string, any>('Records'),
       chain(parseRecord),
       filter(pathSatisfies(anyPass(whitelistFns))(['logEvents', 0, 'message'])) as unknown as (x: LogMessages) => LogMessages,
-      map(addLogLink),
       tap((x) => console.log(`Found ${x.length} entries`)),
       map(publishLog),
       Promise.all.bind(Promise)
