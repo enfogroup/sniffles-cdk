@@ -56,6 +56,27 @@ interface LogMessage {
 }
 type LogMessages = ReadonlyArray<LogMessage>
 
+interface PublishInput {
+  /**
+   * Subject to publish to the SNS Topic
+   */
+  subject: string
+  /**
+   * Message to publish to the SNS Topic
+   */
+  message: string
+  /**
+   * Optional attributes to publish for a message. For OpsGenie make sure to include entry 'eventType: { DataType: "String", StringValue: "create" }'
+   */
+  attributes?: SNS.MessageAttributeMap
+}
+
+export interface TransformerLambdaInput {
+  logMessage: LogMessage
+  accountId: string
+}
+export type TransformerLambdaOutput = PublishInput
+
 const { accountId, errorMessage, patternsName, topicArn } = parseVariables<{
   accountId: string,
   errorMessage: string,

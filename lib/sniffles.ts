@@ -23,7 +23,7 @@ export interface SnifflesProps {
    */
   logGroupPatterns?: string[]
   /**
-   * Log lines which core lambda should use to forward to OpsGenie.
+   * Log lines which the filter lambda should use to forward to OpsGenie.
    * For example '{ .level = 'error' }' would match logged rows with key "level" and value "error"
    * Another example could be "ERROR" which would match logged rows with "ERROR" in them
    * Defaults to ".*" (match everything)
@@ -35,7 +35,7 @@ export interface SnifflesProps {
    */
   stream?: Stream
   /**
-   * Optional topic which core lambda will write to when it finds matches
+   * Optional topic which the filter lambda will write to when it finds matches
    * If no topic is supplied one will be created
    */
   opsGenieTopic?: Topic
@@ -46,13 +46,13 @@ export interface SnifflesProps {
   cloudWatchTopic?: Topic
 }
 
-interface SetupSubscriberLambdaProps {
+interface SetupSubscriptionLambdaProps {
   kinesisArn: string
   patternsParameter: StringListParameter
   cloudWatchRole: string
 }
 
-interface SetupCoreLambdaProps {
+interface SetupFilterLambdaProps {
   kinesisStream: Stream
   snsTopic: Topic
   patternsParameter: StringListParameter
@@ -94,26 +94,26 @@ export class Sniffles extends Construct {
     this.opsGenieTopic = this.setupSnsTopic('OpsGenieTopic', props.opsGenieTopic)
     this.cloudWatchTopic = this.setupSnsTopic('CloudWatchTopic', props.cloudWatchTopic)
 
-    const subscriberLambda = this.setupSubscriberLambda({
+    const subscriptionLambda = this.subscriptionLambda({
       kinesisArn: this.kinesisStream.streamArn,
       patternsParameter: logGroupPatternsParameter,
       cloudWatchRole: role.roleArn
     })
     this.setupLambdaMetricAlarms({
-      lambda: subscriberLambda,
+      lambda: subscriptionLambda,
       topic: this.opsGenieTopic,
-      idPrefix: 'Subscriber'
+      idPrefix: 'Subscription'
     })
 
-    const coreLambda = this.setupCoreLambda({
+    const filterLambda = this.setupFilterLambda({
       kinesisStream: this.kinesisStream,
       patternsParameter: errorPatternsParameter,
       snsTopic: this.opsGenieTopic
     })
     this.setupLambdaMetricAlarms({
-      lambda: coreLambda,
+      lambda: filterLambda,
       topic: this.opsGenieTopic,
-      idPrefix: 'Core'
+      idPrefix: 'Filter'
     })
   }
 
@@ -156,9 +156,9 @@ export class Sniffles extends Construct {
     return new Topic(this, id, {})
   }
 
-  private setupSubscriberLambda (props: SetupSubscriberLambdaProps): NodejsFunction {
-    const lambda = new NodejsFunction(this, 'SubscriberLambda', {
-      entry: join(__dirname, 'subscriberLambda.ts'),
+  private subscriptionLambda (props: SetupSubscriptionLambdaProps): NodejsFunction {
+    const lambda = new NodejsFunction(this, 'SubscriptionLambda', {
+      entry: join(__dirname, 'subscriptionLambda.ts'),
       handler: 'handler',
       memorySize: 128,
       timeout: Duration.seconds(900),
@@ -203,9 +203,9 @@ export class Sniffles extends Construct {
     return lambda
   }
 
-  private setupCoreLambda (props: SetupCoreLambdaProps): NodejsFunction {
-    const lambda = new NodejsFunction(this, 'CoreLambda', {
-      entry: join(__dirname, 'coreLambda.ts'),
+  private setupFilterLambda (props: SetupFilterLambdaProps): NodejsFunction {
+    const lambda = new NodejsFunction(this, 'FilterLambda', {
+      entry: join(__dirname, 'filterLambda.ts'),
       handler: 'handler',
       memorySize: 128,
       timeout: Duration.seconds(30),
@@ -223,7 +223,7 @@ export class Sniffles extends Construct {
       }
     })
 
-    lambda.addEventSourceMapping('CoreLambdaSourceMapping', {
+    lambda.addEventSourceMapping('FilterLambdaSourceMapping', {
       eventSourceArn: props.kinesisStream.streamArn,
       batchSize: 10,
       maxBatchingWindow: Duration.seconds(10),
