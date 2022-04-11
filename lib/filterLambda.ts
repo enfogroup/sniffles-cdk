@@ -53,13 +53,19 @@ interface LogMessage {
 }
 type LogMessages = ReadonlyArray<LogMessage>
 
-const { patternsName, topicArn } = parseVariables<{
-  patternsName: string,
+const { inclusions, topicArn } = parseVariables<{
+  inclusions: string,
+  exclusions: string,
   topicArn: string
 }>({
   variables: [
     {
-      name: 'patternsName',
+      name: 'inclusions',
+      type: VariableType.STRING,
+      required: true
+    },
+    {
+      name: 'exclusions',
       type: VariableType.STRING,
       required: true
     },
@@ -78,7 +84,7 @@ const ssmCache = new SSMCache({
 })
 const sns = new SNS()
 const getWhitelist = () =>
-  ssmCache.getStringListParameter({ Name: patternsName })
+  ssmCache.getStringListParameter({ Name: inclusions })
     .then(map(trim))
 const groupMatch = (re: RegExp) =>
   pipe<any, string[], Option<string[]>>(
