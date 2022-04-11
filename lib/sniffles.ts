@@ -11,6 +11,7 @@ import { Topic } from 'aws-cdk-lib/aws-sns'
 import { Alarm, AlarmProps, ComparisonOperator, Metric, TreatMissingData } from 'aws-cdk-lib/aws-cloudwatch'
 import { SnsAction } from 'aws-cdk-lib/aws-cloudwatch-actions'
 import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs'
+import { Queue } from 'aws-cdk-lib/aws-sqs'
 
 /**
  * Properties needed to create a new Sniffles instance
@@ -56,6 +57,7 @@ interface SetupFilterLambdaProps {
   kinesisStream: Stream
   snsTopic: Topic
   patternsParameter: StringListParameter
+  deadLetterQueue: Queue
 }
 
 interface SetupLambdaAlarmsProps {
@@ -105,10 +107,12 @@ export class Sniffles extends Construct {
       idPrefix: 'Subscription'
     })
 
+    const filterDLQ = this.setupFilterDLQ(this.cloudWatchTopic)
     const filterLambda = this.setupFilterLambda({
       kinesisStream: this.kinesisStream,
       patternsParameter: errorPatternsParameter,
-      snsTopic: this.opsGenieTopic
+      snsTopic: this.opsGenieTopic,
+      deadLetterQueue: filterDLQ
     })
     this.setupLambdaMetricAlarms({
       lambda: filterLambda,
@@ -154,6 +158,28 @@ export class Sniffles extends Construct {
       return existingTopic
     }
     return new Topic(this, id, {})
+  }
+
+  private setupFilterDLQ (topic: Topic): Queue {
+    const queue = new Queue(this, 'FilterDLQ', {
+      retentionPeriod: Duration.days(14)
+    })
+    const messagesInQueueAlarm = new Alarm(this, 'DLQAlarm', {
+      evaluationPeriods: 60,
+      threshold: 1,
+      datapointsToAlarm: 1,
+      comparisonOperator: ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
+      treatMissingData: TreatMissingData.MISSING,
+      metric: new Metric({
+        namespace: 'AWS/SQS',
+        metricName: 'ApproximateNumberOfMessagesDelayed',
+        dimensionsMap: {
+          QueueName: queue.queueName
+        }
+      })
+    })
+    messagesInQueueAlarm.addAlarmAction(new SnsAction(topic))
+    return queue
   }
 
   private subscriptionLambda (props: SetupSubscriptionLambdaProps): NodejsFunction {
@@ -220,7 +246,8 @@ export class Sniffles extends Construct {
         errorMessage: 'oh no',
         patternsName: props.patternsParameter.parameterName,
         topicArn: props.snsTopic.topicArn
-      }
+      },
+      deadLetterQueue: props.deadLetterQueue
     })
 
     lambda.addEventSourceMapping('FilterLambdaSourceMapping', {
