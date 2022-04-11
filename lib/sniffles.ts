@@ -97,7 +97,7 @@ export class Sniffles extends Construct {
 
     const logGroupPatternsParameter = this.setupLogGroupPatterns(props.logGroupPatterns)
     const inclusionPatternsParameter = this.setupInclusionPatterns(props.filterInclusionPatterns)
-    const exclusionsPatternsParameter = this.setupInclusionPatterns(props.filterExclusionPatterns)
+    const exclusionsPatternsParameter = this.setupExclusionPatterns(props.filterExclusionPatterns)
 
     this.kinesisStream = this.setupKinesisStream(props.stream)
     const role = this.setupRoleForCloudWatch(this.kinesisStream)
@@ -145,7 +145,7 @@ export class Sniffles extends Construct {
     })
   }
 
-  private setupExclusionPatterns (patterns: string[] = ['.*']): StringListParameter {
+  private setupExclusionPatterns (patterns: string[] = ['^$']): StringListParameter {
     return new StringListParameter(this, 'ExclusionPatterns', {
       stringListValue: patterns,
       description: 'List of regular expressions used to match errors from log groups. For example "{.level = "error}"'
