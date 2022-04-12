@@ -112,7 +112,7 @@ export class Sniffles extends Construct {
     })
     this.setupLambdaMetricAlarms({
       lambda: subscriptionLambda,
-      topic: this.errorLogTopic,
+      topic: this.cloudWatchTopic,
       idPrefix: 'Subscription'
     })
 
@@ -126,7 +126,7 @@ export class Sniffles extends Construct {
     })
     this.setupLambdaMetricAlarms({
       lambda: filterLambda,
-      topic: this.errorLogTopic,
+      topic: this.cloudWatchTopic,
       idPrefix: 'Filter'
     })
   }
@@ -192,7 +192,8 @@ export class Sniffles extends Construct {
         metricName: 'ApproximateNumberOfMessagesDelayed',
         dimensionsMap: {
           QueueName: queue.queueName
-        }
+        },
+        period: Duration.minutes(1)
       })
     })
     messagesInQueueAlarm.addAlarmAction(new SnsAction(topic))
@@ -275,6 +276,8 @@ export class Sniffles extends Construct {
       startingPosition: StartingPosition.LATEST
     })
 
+    props.kinesisStream.grantRead(lambda)
+
     lambda.addToRolePolicy(new PolicyStatement({
       actions: [
         'sns:Publish'
@@ -319,7 +322,7 @@ export class Sniffles extends Construct {
 
     const logGroupLink = `https://${region}.console.aws.amazon.com/cloudwatch/home?region=${region}#logsV2:log-groups/log-group/$252Faws$252Flambda$252F${functionName}`
     const commonAlarmProps: Pick<AlarmProps, 'evaluationPeriods' | 'threshold' | 'datapointsToAlarm' | 'comparisonOperator' | 'treatMissingData'> = {
-      evaluationPeriods: 60,
+      evaluationPeriods: 1,
       threshold: 1,
       datapointsToAlarm: 1,
       comparisonOperator: ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
@@ -333,7 +336,8 @@ export class Sniffles extends Construct {
       metric: new Metric({
         namespace,
         metricName: logErrorsMetricName,
-        statistic: 'sum'
+        statistic: 'sum',
+        period: Duration.minutes(1)
       })
     }))
 
@@ -347,7 +351,8 @@ export class Sniffles extends Construct {
         statistic: 'sum',
         dimensionsMap: {
           FunctionName: functionName
-        }
+        },
+        period: Duration.minutes(1)
       })
     }))
 
@@ -361,7 +366,8 @@ export class Sniffles extends Construct {
         statistic: 'sum',
         dimensionsMap: {
           FunctionName: functionName
-        }
+        },
+        period: Duration.minutes(1)
       })
     }))
 
