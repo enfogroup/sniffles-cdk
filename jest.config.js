@@ -18,3 +18,4 @@ module.exports = {
   verbose: true,
   reporters: ['default']
 }
+process.env.ENFO_ENV_VARS_DISABLE_REQUIRED = 'true'
