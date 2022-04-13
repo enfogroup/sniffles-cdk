@@ -1,9 +1,15 @@
 import * as opsGenie from '../lib/opsGenie/forwarderLambda'
+import { OpsGenieForwarder } from '../lib/opsGenie'
+
+import '@aws-cdk/assert/jest'
 
 import { SNSEvent } from 'aws-lambda'
 import { LogMessage } from '../lib/filterLambda'
+import { Stack } from 'aws-cdk-lib'
+import { Topic } from 'aws-cdk-lib/aws-sns'
+import { Match, Template } from 'aws-cdk-lib/assertions'
 
-describe('OpsGenie lambda', () => {
+describe('OpsGenie lambda logic', () => {
   describe('handler', () => {
     it('should extract and format input for sns publish', async () => {
       const logLine = {
@@ -40,6 +46,64 @@ describe('OpsGenie lambda', () => {
           }
         }
       })
+    })
+  })
+})
+
+describe('OpsGenie Forwarder Construct', () => {
+  describe('Lambda', () => {
+    it('should create a lambda', () => {
+      const stack = new Stack()
+
+      new OpsGenieForwarder(stack, 'Test', {
+        opsGenieTopic: new Topic(stack, 'Topic'),
+        cloudWatchTopic: new Topic(stack, 'CWTopic')
+      })
+
+      const template = Template.fromStack(stack)
+      template.hasResourceProperties('AWS::Lambda::Function', Match.objectLike({
+        Environment: {
+          Variables: {
+            topic: {}
+          }
+        }
+      }))
+    })
+  })
+
+  describe('CloudWatch', () => {
+    it('should create alarms', () => {
+      const stack = new Stack()
+      new OpsGenieForwarder(stack, 'Test', {
+        opsGenieTopic: new Topic(stack, 'Topic'),
+        cloudWatchTopic: new Topic(stack, 'CWTopic')
+      })
+
+      expect(stack).toCountResources('AWS::CloudWatch::Alarm', 4) // 3 + 1 for the DLQ
+    })
+
+    it('should setup alarms for the DLQ', () => {
+      const stack = new Stack()
+      new OpsGenieForwarder(stack, 'Test', {
+        opsGenieTopic: new Topic(stack, 'Topic'),
+        cloudWatchTopic: new Topic(stack, 'CWTopic')
+      })
+
+      expect(stack).toHaveResource('AWS::CloudWatch::Alarm', {
+        MetricName: 'ApproximateNumberOfMessagesDelayed'
+      })
+    })
+  })
+
+  describe('Queue', () => {
+    it('should create a DLQ', () => {
+      const stack = new Stack()
+      new OpsGenieForwarder(stack, 'Test', {
+        opsGenieTopic: new Topic(stack, 'Topic'),
+        cloudWatchTopic: new Topic(stack, 'CWTopic')
+      })
+
+      expect(stack).toCountResources('AWS::SQS::Queue', 1)
     })
   })
 })
