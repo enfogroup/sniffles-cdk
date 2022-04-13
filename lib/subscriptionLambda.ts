@@ -46,10 +46,12 @@ const { kinesisStream, inclusions, exclusions, cloudWatchRole } = parseVariables
   ]
 })
 
+// istanbul ignore next
 const getInclusionPatterns = (): Promise<string[]> =>
   ssmCache.getStringListParameter({ Name: inclusions })
     .then(map(trim))
     .then(tap(console.log))
+// istanbul ignore next
 const getExclusionPatterns = (): Promise<string[]> =>
   ssmCache.getStringListParameter({ Name: exclusions })
     .then(map(trim))
@@ -63,13 +65,16 @@ const patternsToFunctions = map(
     test
   )
 )
+// istanbul ignore next
 const getLogGroups = (token?: string): Promise<CloudWatchLogs.LogGroup[]> =>
   cwl.describeLogGroups({ nextToken: token }).promise()
     .then(({ logGroups, nextToken }) =>
       !nextToken
         ? logGroups ?? []
         : getLogGroups(nextToken).then(concat(logGroups ?? [])))
-const getLogGroupsAndPatterns = (): Promise<[string[], string[], string[]]> =>
+
+// istanbul ignore next
+export const getLogGroupsAndPatterns = (): Promise<[string[], string[], string[]]> =>
   Promise.all([
     getLogGroups()
       .then((logGroups: CloudWatchLogs.LogGroup[]): string[] => {
@@ -84,13 +89,14 @@ const getLogGroupsAndPatterns = (): Promise<[string[], string[], string[]]> =>
     getInclusionPatterns(),
     getExclusionPatterns()
   ])
-const filterLogGroups = ([logGroupNames, inclusionPatterns, exclusionPatterns]: [string[], string[], string[]]) =>
+export const filterLogGroups = ([logGroupNames, inclusionPatterns, exclusionPatterns]: [string[], string[], string[]]) =>
   pipe(
-    reject(test(/Sniffles/)), // if anything in the Sniffle pipeline gets into the pipeline we'll get a feedback loop
+    reject(test(/[sS]niffles/)), // if anything in the Sniffle pipeline gets into the pipeline we'll get a feedback loop
     filter(anyPass(patternsToFunctions(inclusionPatterns))),
     reject(anyPass(patternsToFunctions(exclusionPatterns)))
   )(logGroupNames)
-const subscribeLogGroup = (logGroupName: string) =>
+// istanbul ignore next
+export const subscribeLogGroup = (logGroupName: string) =>
   cwl.putSubscriptionFilter({
     logGroupName,
     roleArn: cloudWatchRole,
@@ -101,7 +107,7 @@ const subscribeLogGroup = (logGroupName: string) =>
   }).promise()
     .catch(console.warn)
 
-exports.handler = (): Promise<string | void> =>
+export const handler = (): Promise<string | void> =>
   getLogGroupsAndPatterns()
     .then(filterLogGroups)
     .then(tap(console.log))
