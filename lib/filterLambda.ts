@@ -42,7 +42,7 @@ interface LogEvent {
   readonly message: string
 }
 type LogEvents = ReadonlyArray<LogEvent>
-interface LogMessage {
+export interface LogMessage {
   readonly messageType: string
   readonly owner: string
   readonly logGroup: string
