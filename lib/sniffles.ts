@@ -397,5 +397,14 @@ export class OpsGenieLambda extends NodejsFunction {
         topic: props.topic.topicArn
       }
     })
+
+    this.addToRolePolicy(new PolicyStatement({
+      actions: [
+        'sns:Publish'
+      ],
+      resources: [
+        props.topic.topicArn
+      ]
+    }))
   }
 }
