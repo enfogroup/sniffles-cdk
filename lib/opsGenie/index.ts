@@ -6,12 +6,22 @@ import { Topic } from 'aws-cdk-lib/aws-sns'
 import { Construct } from 'constructs'
 import { join } from 'path'
 
-export interface OpsGenieLambdaProps {
+/**
+ * Properties needed when creating a new OpsGenieForwarder
+ */
+export interface OpsGenieForwarderProps {
+  /**
+   * SNS Topic to publish formatted logs to
+   */
   topic: Topic
 }
 
-export class OpsGenieLambda extends NodejsFunction {
-  constructor (scope: Construct, id: string, props: OpsGenieLambdaProps) {
+/**
+ * Formats and forwards logs to an SNS Topic
+ * Messages will be formatted to work with OpsGenie SNS hooks
+ */
+export class OpsGenieForwarder extends NodejsFunction {
+  constructor (scope: Construct, id: string, props: OpsGenieForwarderProps) {
     super(scope, id, {
       entry: join(__dirname, 'code.ts'),
       handler: 'handler',
