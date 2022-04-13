@@ -12,13 +12,28 @@ describe('Sniffles', () => {
       const stack = new Stack()
       new Sniffles(stack, 'Test', {})
 
-      expect(stack).toCountResources('AWS::SSM::Parameter', 3)
+      expect(stack).toCountResources('AWS::SSM::Parameter', 4)
     })
 
-    it('should be possible to set values to log group parameter', () => {
+    it('should be possible to set values to log group inclusions', () => {
       const stack = new Stack()
       new Sniffles(stack, 'Test', {
-        logGroupPatterns: ['abc', 'def', 'ghi']
+        subscribeLogGroupsProps: {
+          inclusionPatterns: ['abc', 'def', 'ghi']
+        }
+      })
+
+      expect(stack).toHaveResource('AWS::SSM::Parameter', {
+        Value: 'abc,def,ghi'
+      })
+    })
+
+    it('should be possible to set values to log group exclusions', () => {
+      const stack = new Stack()
+      new Sniffles(stack, 'Test', {
+        subscribeLogGroupsProps: {
+          exclusionPatterns: ['abc', 'def', 'ghi']
+        }
       })
 
       expect(stack).toHaveResource('AWS::SSM::Parameter', {
@@ -29,7 +44,9 @@ describe('Sniffles', () => {
     it('should be possible to set values to filter inclusions', () => {
       const stack = new Stack()
       new Sniffles(stack, 'Test', {
-        filterInclusionPatterns: ['abc', 'def', 'ghi']
+        filterLogsProps: {
+          inclusionPatterns: ['abc', 'def', 'ghi']
+        }
       })
 
       expect(stack).toHaveResource('AWS::SSM::Parameter', {
@@ -40,7 +57,9 @@ describe('Sniffles', () => {
     it('should be possible to set values to filter exclusions', () => {
       const stack = new Stack()
       new Sniffles(stack, 'Test', {
-        filterExclusionPatterns: ['abc', 'def', 'ghi']
+        filterLogsProps: {
+          exclusionPatterns: ['abc', 'def', 'ghi']
+        }
       })
 
       expect(stack).toHaveResource('AWS::SSM::Parameter', {
@@ -133,9 +152,11 @@ describe('Sniffles', () => {
     it('should use the filter topic if supplied', () => {
       const stack = new Stack()
       new Sniffles(stack, 'Test', {
-        errorLogTopic: new Topic(stack, 'Topic', {
-          topicName: 'filter'
-        })
+        filterLogsProps: {
+          topic: new Topic(stack, 'Topic', {
+            topicName: 'filter'
+          })
+        }
       })
 
       expect(stack).toCountResources('AWS::SNS::Topic', 2)
@@ -174,7 +195,8 @@ describe('Sniffles', () => {
           Variables: {
             kinesisStream: {},
             cloudWatchRole: {},
-            patternsName: {}
+            inclusions: {},
+            exclusions: {}
           }
         }
       }))

@@ -105,6 +105,7 @@ export class Sniffles extends Construct {
    * Topic which all internal Sniffles logic alarms will be pushed to
    */
   readonly cloudWatchTopic: Topic
+  // istanbul ignore next
   constructor (scope: Construct, id: string, props?: SnifflesProps) {
     super(scope, id)
 
