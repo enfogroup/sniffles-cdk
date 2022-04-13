@@ -1,6 +1,7 @@
 *.ts
 !*Lambda.ts
 !*.d.ts
+*Lambda.js
 
 # CDK asset staging directory
 .cdk.staging
