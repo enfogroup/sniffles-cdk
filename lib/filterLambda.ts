@@ -10,7 +10,6 @@ import anyPass from 'ramda/src/anyPass'
 import both from 'ramda/src/both'
 import chain from 'ramda/src/chain'
 import cond from 'ramda/src/cond'
-import drop from 'ramda/src/drop'
 import endsWith from 'ramda/src/endsWith'
 import filter from 'ramda/src/filter'
 import flip from 'ramda/src/flip'
@@ -26,7 +25,6 @@ import path from 'ramda/src/path'
 import pathSatisfies from 'ramda/src/pathSatisfies'
 import pipe from 'ramda/src/pipe'
 import prop from 'ramda/src/prop'
-import split from 'ramda/src/split'
 import startsWith from 'ramda/src/startsWith'
 import T from 'ramda/src/T'
 import tail from 'ramda/src/tail'
@@ -34,6 +32,7 @@ import tap from 'ramda/src/tap'
 import test from 'ramda/src/test'
 import toString from 'ramda/src/toString'
 import trim from 'ramda/src/trim'
+import reject from 'ramda/src/reject'
 import { gunzipSync } from 'zlib'
 
 interface LogEvent {
@@ -53,7 +52,7 @@ export interface LogMessage {
 }
 type LogMessages = ReadonlyArray<LogMessage>
 
-const { inclusions, topicArn } = parseVariables<{
+const { inclusions, topicArn, exclusions } = parseVariables<{
   inclusions: string,
   exclusions: string,
   topicArn: string
@@ -80,11 +79,16 @@ const { inclusions, topicArn } = parseVariables<{
 const awsRegion = parseEnvString('AWS_REGION', 'eu-west-1')
 const ssmCache = new SSMCache({
   region: awsRegion,
-  defaultTTL: 60
+  defaultTTL: 300
 })
 const sns = new SNS()
-const getWhitelist = () =>
+// istanbul ignore next
+export const getInclusionPatterns = () =>
   ssmCache.getStringListParameter({ Name: inclusions })
+    .then(map(trim))
+// istanbul ignore next
+export const getExclusionPatterns = () =>
+  ssmCache.getStringListParameter({ Name: exclusions })
     .then(map(trim))
 const groupMatch = (re: RegExp) =>
   pipe<any, string[], Option<string[]>>(
@@ -120,11 +124,12 @@ const parseRecord = pipe<any, string, Buffer, Buffer, string, LogMessage, LogMes
   (m: LogMessage) => map((logEvent: LogEvent) => ({ ...m, logEvents: [logEvent] }))(m.logEvents)
 )
 
-const publishLog = (log: object) =>
+export const publishLog = async (log: object) => {
   sns.publish({
     TopicArn: topicArn,
     Message: JSON.stringify(log)
   }).promise()
+}
 
 export const
   toStringFn = includes
@@ -139,25 +144,25 @@ export const toJspathFn = (str: string) =>
     optmap<number, boolean>(flip(gt)(0)),
     optGetOrElse<boolean>(() => false)
   )
-export const toWhitelistFn = cond([
+export const toMatcherFunction = cond([
   [test(/^\/[^/]+\/[gimsuy]*$/), toRegExpFn],
   [both(startsWith('{'), endsWith('}')), toJspathFn],
   [T, toStringFn]
 ])
-export const getLogId = pipe<any, string, string[], string[], string>(
-  path(['logEvents', 0, 'message']) as unknown as (x: LogMessage) => string,
-  split('\t'),
-  drop(1),
-  head
-)
+const getPatternsFunctions = async () =>
+  Promise.all([
+    getInclusionPatterns().then(map(toMatcherFunction)),
+    getExclusionPatterns().then(map(toMatcherFunction))
+  ])
+
 export const handler = (event: KinesisStreamEvent) =>
-  getWhitelist()
+  getPatternsFunctions()
     // .then(tap(console.log))
-    .then(map(toWhitelistFn))
-    .then((whitelistFns) => pipe<any, KinesisStreamRecord[], LogMessages, LogMessages, LogMessages, Promise<SNS.Types.PublishResponse>[], Promise<SNS.Types.PublishResponse[]>>(
+    .then(([inclusionFunctions, exclusionFunctions]) => pipe<any, KinesisStreamRecord[], LogMessages, LogMessages, LogMessages, LogMessages, Promise<void>[], Promise<void[]>>(
       prop<string, any>('Records'),
       chain(parseRecord),
-      filter(pathSatisfies(anyPass(whitelistFns))(['logEvents', 0, 'message'])) as unknown as (x: LogMessages) => LogMessages,
+      filter(pathSatisfies(anyPass(inclusionFunctions))(['logEvents', 0, 'message'])) as unknown as (x: LogMessages) => LogMessages,
+      reject(pathSatisfies(anyPass(exclusionFunctions))(['logEvents', 0, 'message'])) as unknown as (x: LogMessages) => LogMessages,
       tap((x) => console.log(`Found ${x.length} entries`)),
       map(publishLog),
       Promise.all.bind(Promise)
