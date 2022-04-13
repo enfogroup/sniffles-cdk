@@ -90,6 +90,7 @@ export const getInclusionPatterns = () =>
 export const getExclusionPatterns = () =>
   ssmCache.getStringListParameter({ Name: exclusions })
     .then(map(trim))
+// istanbul ignore next
 const groupMatch = (re: RegExp) =>
   pipe<any, string[], Option<string[]>>(
     match(re),
@@ -102,6 +103,7 @@ const groupMatch = (re: RegExp) =>
       )
     )
   )
+// istanbul ignore next
 const toRegExp = pipe<any, string[], RegExp>(
   match(/^\/([^/]+)\/([gimsuy]*)$/),
   ([_, re, flags]) => new RegExp(re, flags)
@@ -124,6 +126,7 @@ const parseRecord = pipe<any, string, Buffer, Buffer, string, LogMessage, LogMes
   (m: LogMessage) => map((logEvent: LogEvent) => ({ ...m, logEvents: [logEvent] }))(m.logEvents)
 )
 
+// istanbul ignore next
 export const publishLog = async (log: object) => {
   sns.publish({
     TopicArn: topicArn,
@@ -134,6 +137,7 @@ export const publishLog = async (log: object) => {
 export const
   toStringFn = includes
 export const toRegExpFn = pipe<any, any, any>(toRegExp, test)
+// istanbul ignore next
 export const toJspathFn = (str: string) =>
   pipe<any, Option<string[]>, Option<string>, Option<any>, Option<any[]>, Option<number>, Option<boolean>, boolean>(
     groupMatch(/({[\s\S]+})/), // . doesn't match newlines, use [\s\S] instead

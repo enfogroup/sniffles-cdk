@@ -28,7 +28,7 @@ describe('Filter lambda', () => {
       return input
     }
 
-    it('should match a single log line', async () => {
+    it('should match JSON patterns for a single log line', async () => {
       const input = buildInput([{ level: 'error' }])
       const mocks = [
         jest.spyOn(filter, 'getInclusionPatterns').mockResolvedValue(['{ .level === "error" }']),
@@ -45,7 +45,7 @@ describe('Filter lambda', () => {
       checkAllMocksCalled(mocks, 1)
     })
 
-    it('should match multiple log lines', async () => {
+    it('should match JSON patterns for multiple log lines', async () => {
       const input = buildInput([{ level: 'error', a: 42 }, { level: 'error', b: 4711 }])
       const mocks = [
         jest.spyOn(filter, 'getInclusionPatterns').mockResolvedValue(['{ .level === "error" }']),
@@ -63,7 +63,7 @@ describe('Filter lambda', () => {
       checkAllMocksCalled(mocks, 1)
     })
 
-    it('should not match anything', async () => {
+    it('should not match anything - JSON patterns', async () => {
       const input = buildInput([{ level: 'info' }])
       const mocks = [
         jest.spyOn(filter, 'getInclusionPatterns').mockResolvedValue(['{ .level === "error" }']),
@@ -78,7 +78,7 @@ describe('Filter lambda', () => {
       checkAllMocksCalled(mocks, 1)
     })
 
-    it('should use exclusions', async () => {
+    it('should use exclusions - JSON patterns', async () => {
       const input = buildInput([{ level: 'error', a: 42 }, { level: 'error', b: 4711 }])
       const mocks = [
         jest.spyOn(filter, 'getInclusionPatterns').mockResolvedValue(['{ .level === "error" }']),
@@ -91,6 +91,23 @@ describe('Filter lambda', () => {
       expect(output).toEqual('OK')
       expect(publishLogMock.mock.calls).toEqual([
         [{ logEvents: [{ message: '{"level":"error","a":42}' }] }]
+      ])
+      checkAllMocksCalled(mocks, 1)
+    })
+
+    it('should match using regular expressions', async () => {
+      const input = buildInput([{ message: 'ERROR: It all went wrong!' }])
+      const mocks = [
+        jest.spyOn(filter, 'getInclusionPatterns').mockResolvedValue(['/ERROR/']),
+        jest.spyOn(filter, 'getExclusionPatterns').mockResolvedValue(['^$'])
+      ]
+      const publishLogMock = jest.spyOn(filter, 'publishLog').mockResolvedValue()
+
+      const output = await filter.handler(input)
+
+      expect(output).toEqual('OK')
+      expect(publishLogMock.mock.calls).toEqual([
+        [{ logEvents: [{ message: '{"message":"ERROR: It all went wrong!"}' }] }]
       ])
       checkAllMocksCalled(mocks, 1)
     })
