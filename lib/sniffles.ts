@@ -18,53 +18,66 @@ import { Queue } from 'aws-cdk-lib/aws-sqs'
  */
 export interface SnifflesProps {
   /**
-   * Regular expressions which the subscription lambda should use to find log groups
-   * For example "^/aws/lambda/.*-prod.*" would match log groups with "prod" in their names
-   * Defaults to "^$" (no matches)
+   * Properties for subscribeLogGroups lambda
    */
-  logGroupPatterns?: string[]
+  subscribeLogGroupsProps?: {
+    /**
+     * Regular expressions which will be used to match log groups
+     * For example "^/aws/lambda/.*-prod-.*" would match lambda log groups with "-prod-" in their names
+     * Defaults to "^/aws/lambda/.*-prod-.*"
+     */
+    inclusionPatterns?: string[]
+    /**
+     * Regular expressions which will be used to exclude log groups from matching
+     * Defaults to "^$" (no matches)
+     */
+    exclusionPatterns?: string[]
+  }
   /**
-   * Log lines which the filter lambda should use to forward to errorLogTopic
-   * For example '{ .level = 'error' }' would match logged rows with key "level" and value "error"
-   * Another example could be "ERROR" which would match logged rows with "ERROR" in them
-   * Defaults to ".*" (match everything)
+   * Properties for filterLogs lambda
    */
-  filterInclusionPatterns?: string[]
+  filterLogsProps?: {
+    /**
+     * Regular expressions which will be used to forward log messages
+     * For example '{ .level = "error" }' would match objects logged with key level and value "error" present
+     * Defaults to '{ .level === "error" }'
+     */
+    inclusionPatterns?: string[]
+    /**
+     * Regular expressions which will be used to exclude log messages from being matched
+     * Defaults to "^$" (no matches)
+     */
+    exclusionPatterns?: string[]
+    /**
+     * SNS topic to publish matches to
+     * If no topic is supplied one will be generated
+     */
+    topic?: Topic
+  }
   /**
-   * Log lines which the filter lambda should block from being forwarded to errorLogTopic
-   * For example '{ .level = 'error' }' would match logged rows with key "level" and value "error"
-   * Another example could be "ERROR" which would match logged rows with "ERROR" in them
-   * Defaults to "^$" (match nothing)
-   */
-  filterExclusionPatterns?: string[]
-  /**
-   * Optional Kinesis stream. Will be used to subscribe all matches from logGroupPatterns
+   * Optional Kinesis stream. Will be used to subscribe all matches from the subscribeLogGroups lambda
    * If no stream is supplied one will be created
    */
   stream?: Stream
   /**
-   * Optional topic which the filter lambda will write to when it finds matches
-   * If no topic is supplied one will be created
-   */
-  errorLogTopic?: Topic
-  /**
-   * Optional topic used to send alarms to when internal Sniffles lambdas encounter issues
+   * Optional topic used to send alarms to when internal Sniffles resources encounter issues
    * If no topic is supplied one will be created
    */
   cloudWatchTopic?: Topic
 }
 
 interface SetupSubscriptionLambdaProps {
-  kinesisArn: string
-  patternsParameter: StringListParameter
-  cloudWatchRole: string
+  kinesisStream: Stream
+  inclusionPatterns: StringListParameter
+  exclusionPatterns: StringListParameter
+  cloudWatchRole: Role
 }
 
 interface SetupFilterLambdaProps {
   kinesisStream: Stream
   snsTopic: Topic
-  inclusionsParameter: StringListParameter
-  exclusionsParameter: StringListParameter
+  inclusionPatterns: StringListParameter
+  exclusionPatterns: StringListParameter
   deadLetterQueue: Queue
 }
 
@@ -92,23 +105,20 @@ export class Sniffles extends Construct {
    * Topic which all internal Sniffles logic alarms will be pushed to
    */
   readonly cloudWatchTopic: Topic
-  constructor (scope: Construct, id: string, props: SnifflesProps) {
+  constructor (scope: Construct, id: string, props?: SnifflesProps) {
     super(scope, id)
 
-    const logGroupPatternsParameter = this.setupLogGroupPatterns(props.logGroupPatterns)
-    const inclusionPatternsParameter = this.setupInclusionPatterns(props.filterInclusionPatterns)
-    const exclusionsPatternsParameter = this.setupExclusionPatterns(props.filterExclusionPatterns)
-
-    this.kinesisStream = this.setupKinesisStream(props.stream)
+    this.kinesisStream = this.setupKinesisStream(props?.stream)
     const role = this.setupRoleForCloudWatch(this.kinesisStream)
 
-    this.errorLogTopic = this.setupSnsTopic('ErrorLogTopic', props.errorLogTopic)
-    this.cloudWatchTopic = this.setupSnsTopic('CloudWatchTopic', props.cloudWatchTopic)
+    this.errorLogTopic = this.setupSnsTopic('FilterLogsTopic', props?.filterLogsProps?.topic)
+    this.cloudWatchTopic = this.setupSnsTopic('CloudWatchTopic', props?.cloudWatchTopic)
 
     const subscriptionLambda = this.subscriptionLambda({
-      kinesisArn: this.kinesisStream.streamArn,
-      patternsParameter: logGroupPatternsParameter,
-      cloudWatchRole: role.roleArn
+      kinesisStream: this.kinesisStream,
+      inclusionPatterns: this.setupLogGroupInclusionPatterns(props?.subscribeLogGroupsProps?.inclusionPatterns),
+      exclusionPatterns: this.setupLogGroupExclusionPatterns(props?.subscribeLogGroupsProps?.exclusionPatterns),
+      cloudWatchRole: role
     })
     this.setupLambdaMetricAlarms({
       lambda: subscriptionLambda,
@@ -119,8 +129,8 @@ export class Sniffles extends Construct {
     const filterDLQ = this.setupFilterDLQ(this.cloudWatchTopic)
     const filterLambda = this.setupFilterLambda({
       kinesisStream: this.kinesisStream,
-      inclusionsParameter: inclusionPatternsParameter,
-      exclusionsParameter: exclusionsPatternsParameter,
+      inclusionPatterns: this.setupFilterLogsInclusionPatterns(props?.filterLogsProps?.inclusionPatterns),
+      exclusionPatterns: this.setupFilterLogsExclusionPatterns(props?.filterLogsProps?.exclusionPatterns),
       snsTopic: this.errorLogTopic,
       deadLetterQueue: filterDLQ
     })
@@ -131,24 +141,27 @@ export class Sniffles extends Construct {
     })
   }
 
-  private setupLogGroupPatterns (patterns: string[] = ['^$']): StringListParameter {
-    return new StringListParameter(this, 'LogGroupPatterns', {
-      stringListValue: patterns,
-      description: 'Whitelisted log group patterns for Sniffles. Log groups matching the pattern will be subscribed for potential alarms.'
+  private setupLogGroupInclusionPatterns (patterns: string[] = ['^/aws/lambda/.*-prod-.*']): StringListParameter {
+    return new StringListParameter(this, 'LogGroupInclusionPatterns', {
+      stringListValue: patterns
     })
   }
 
-  private setupInclusionPatterns (patterns: string[] = ['.*']): StringListParameter {
-    return new StringListParameter(this, 'InclusionPatterns', {
-      stringListValue: patterns,
-      description: 'List of regular expressions used to match errors from log groups. For example "{.level = "error}"'
+  private setupLogGroupExclusionPatterns (patterns: string[] = ['^$']): StringListParameter {
+    return new StringListParameter(this, 'LogGroupExclusionPatterns', {
+      stringListValue: patterns
     })
   }
 
-  private setupExclusionPatterns (patterns: string[] = ['^$']): StringListParameter {
-    return new StringListParameter(this, 'ExclusionPatterns', {
-      stringListValue: patterns,
-      description: 'List of regular expressions used to match errors from log groups. For example "{.level = "error}"'
+  private setupFilterLogsInclusionPatterns (patterns: string[] = ['{ .level === "error" }']): StringListParameter {
+    return new StringListParameter(this, 'FilterLogsInclusionPatterns', {
+      stringListValue: patterns
+    })
+  }
+
+  private setupFilterLogsExclusionPatterns (patterns: string[] = ['^$']): StringListParameter {
+    return new StringListParameter(this, 'FilterLogsExclusionPatterns', {
+      stringListValue: patterns
     })
   }
 
@@ -201,7 +214,7 @@ export class Sniffles extends Construct {
   }
 
   private subscriptionLambda (props: SetupSubscriptionLambdaProps): NodejsFunction {
-    const lambda = new NodejsFunction(this, 'SubscriptionLambda', {
+    const lambda = new NodejsFunction(this, 'SnifflesSubscribeLogGroups', {
       entry: join(__dirname, 'subscriptionLambda.ts'),
       handler: 'handler',
       memorySize: 128,
@@ -213,9 +226,10 @@ export class Sniffles extends Construct {
         sourceMap: false
       },
       environment: {
-        kinesisStream: props.kinesisArn,
-        cloudWatchRole: props.cloudWatchRole,
-        patternsName: props.patternsParameter.parameterName
+        kinesisStream: props.kinesisStream.streamArn,
+        cloudWatchRole: props.cloudWatchRole.roleArn,
+        inclusions: props.inclusionPatterns.parameterName,
+        exclusions: props.exclusionPatterns.parameterName
       }
     })
     lambda.addToRolePolicy(new PolicyStatement({
@@ -223,7 +237,7 @@ export class Sniffles extends Construct {
         'iam:PassRole'
       ],
       resources: [
-        props.cloudWatchRole
+        props.cloudWatchRole.roleArn
       ]
     }))
     lambda.addToRolePolicy(new PolicyStatement({
@@ -241,14 +255,15 @@ export class Sniffles extends Construct {
         'ssm:GetParameter'
       ],
       resources: [
-        props.patternsParameter.parameterArn
+        props.inclusionPatterns.parameterArn,
+        props.exclusionPatterns.parameterArn
       ]
     }))
     return lambda
   }
 
   private setupFilterLambda (props: SetupFilterLambdaProps): NodejsFunction {
-    const lambda = new NodejsFunction(this, 'FilterLambda', {
+    const lambda = new NodejsFunction(this, 'SnifflesFilterLogs', {
       entry: join(__dirname, 'filterLambda.ts'),
       handler: 'handler',
       memorySize: 128,
@@ -260,8 +275,8 @@ export class Sniffles extends Construct {
         sourceMap: false
       },
       environment: {
-        inclusions: props.inclusionsParameter.parameterName,
-        exclusions: props.exclusionsParameter.parameterName,
+        inclusions: props.inclusionPatterns.parameterName,
+        exclusions: props.exclusionPatterns.parameterName,
         topicArn: props.snsTopic.topicArn
       },
       deadLetterQueue: props.deadLetterQueue
@@ -292,8 +307,8 @@ export class Sniffles extends Construct {
         'ssm:GetParameter'
       ],
       resources: [
-        props.inclusionsParameter.parameterArn,
-        props.exclusionsParameter.parameterArn
+        props.inclusionPatterns.parameterArn,
+        props.exclusionPatterns.parameterArn
       ]
     }))
 

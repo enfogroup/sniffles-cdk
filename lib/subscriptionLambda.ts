@@ -16,9 +16,9 @@ const ssmCache = new SSMCache({
   defaultTTL: 60
 })
 const cwl = new CloudWatchLogs()
-const { kinesisStream, patternsName, cloudWatchRole } = parseVariables<{
+const { kinesisStream, inclusions, cloudWatchRole } = parseVariables<{
   kinesisStream: string,
-  patternsName: string,
+  inclusions: string,
   cloudWatchRole: string
 }>({
   variables: [
@@ -28,7 +28,12 @@ const { kinesisStream, patternsName, cloudWatchRole } = parseVariables<{
       required: true
     },
     {
-      name: 'patternsName',
+      name: 'inclusions',
+      type: VariableType.STRING,
+      required: true
+    },
+    {
+      name: 'exclusions',
       type: VariableType.STRING,
       required: true
     },
@@ -41,7 +46,7 @@ const { kinesisStream, patternsName, cloudWatchRole } = parseVariables<{
 })
 
 const getPatterns = (): Promise<string[]> =>
-  ssmCache.getStringListParameter({ Name: patternsName })
+  ssmCache.getStringListParameter({ Name: inclusions })
     .then(map(trim))
     .then(tap(console.log))
 const toRegExp = (str: string) => new RegExp(str)
