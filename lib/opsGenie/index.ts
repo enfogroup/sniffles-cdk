@@ -27,14 +27,15 @@ export interface OpsGenieForwarderProps {
  * Messages will be formatted to work with OpsGenie SNS hooks
  */
 export class OpsGenieForwarder extends Stack {
+  public lambda: NodejsFunction
   constructor (scope: Construct, id: string, props: OpsGenieForwarderProps) {
     super(scope, id)
 
-    const lambda = this.setupLambda(props.opsGenieTopic)
+    this.lambda = this.setupLambda(props.opsGenieTopic)
     setupLambdaAlarms({
       idPrefix: 'OpsGenie',
       stack: this,
-      lambda,
+      lambda: this.lambda,
       topic: props.cloudWatchTopic
     })
     this.setupDLQ(props.cloudWatchTopic)
