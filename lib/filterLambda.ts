@@ -128,7 +128,7 @@ const parseRecord = pipe<any, string, Buffer, Buffer, string, LogMessage, LogMes
 
 // istanbul ignore next
 export const publishLog = async (log: object) => {
-  sns.publish({
+  await sns.publish({
     TopicArn: topicArn,
     Message: JSON.stringify(log)
   }).promise()
