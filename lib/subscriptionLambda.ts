@@ -16,14 +16,14 @@ const ssmCache = new SSMCache({
   defaultTTL: 60
 })
 const cwl = new CloudWatchLogs()
-const { kinesisArn, patternsName, cloudWatchRole } = parseVariables<{
-  kinesisArn: string,
+const { kinesisStream, patternsName, cloudWatchRole } = parseVariables<{
+  kinesisStream: string,
   patternsName: string,
   cloudWatchRole: string
 }>({
   variables: [
     {
-      name: 'kinesisArn',
+      name: 'kinesisStream',
       type: VariableType.STRING,
       required: true
     },
@@ -83,7 +83,7 @@ const subscribeLogGroup = (logGroupName: string) =>
     roleArn: cloudWatchRole,
     filterPattern: '',
     filterName: 'LogsToKinesis',
-    destinationArn: kinesisArn,
+    destinationArn: kinesisStream,
     distribution: 'Random'
   }).promise()
     .catch(console.warn)
