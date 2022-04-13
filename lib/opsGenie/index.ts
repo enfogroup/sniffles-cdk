@@ -23,7 +23,7 @@ export interface OpsGenieForwarderProps {
 export class OpsGenieForwarder extends NodejsFunction {
   constructor (scope: Construct, id: string, props: OpsGenieForwarderProps) {
     super(scope, id, {
-      entry: join(__dirname, 'code.ts'),
+      entry: join(__dirname, 'forwarderLambda.ts'),
       handler: 'handler',
       memorySize: 128,
       timeout: Duration.seconds(3),
