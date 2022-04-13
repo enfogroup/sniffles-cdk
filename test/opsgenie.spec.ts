@@ -1,4 +1,4 @@
-import * as opsGenie from '../lib/opsGenie/code'
+import * as opsGenie from '../lib/opsGenie/forwarderLambda'
 
 import { SNSEvent } from 'aws-lambda'
 import { LogMessage } from '../lib/filterLambda'
