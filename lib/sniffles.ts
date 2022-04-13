@@ -10,6 +10,9 @@ import { StartingPosition } from 'aws-cdk-lib/aws-lambda'
 import { Topic } from 'aws-cdk-lib/aws-sns'
 import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs'
 import { Queue } from 'aws-cdk-lib/aws-sqs'
+import { Rule, Schedule } from 'aws-cdk-lib/aws-events'
+import { LambdaFunction } from 'aws-cdk-lib/aws-events-targets'
+
 import { setupLambdaAlarms, setupQueueAlarms } from './alarms'
 
 /**
@@ -218,6 +221,10 @@ export class Sniffles extends Construct {
         exclusions: props.exclusionPatterns.parameterName
       }
     })
+    const eventRule = new Rule(this, 'scheduleRule', {
+      schedule: Schedule.rate(Duration.minutes(15))
+    })
+    eventRule.addTarget(new LambdaFunction(lambda))
     lambda.addToRolePolicy(new PolicyStatement({
       actions: [
         'iam:PassRole'
