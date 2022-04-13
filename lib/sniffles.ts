@@ -375,36 +375,3 @@ export class Sniffles extends Construct {
     return alarms
   }
 }
-
-export interface OpsGenieLambdaProps {
-  topic: Topic
-}
-
-export class OpsGenieLambda extends NodejsFunction {
-  constructor (scope: Construct, id: string, props: OpsGenieLambdaProps) {
-    super(scope, id, {
-      entry: join(__dirname, 'opsGenieLambda.ts'),
-      handler: 'handler',
-      memorySize: 128,
-      timeout: Duration.seconds(3),
-      logRetention: RetentionDays.ONE_YEAR,
-      bundling: {
-        minify: true,
-        externalModules: ['aws-sdk'],
-        sourceMap: false
-      },
-      environment: {
-        topic: props.topic.topicArn
-      }
-    })
-
-    this.addToRolePolicy(new PolicyStatement({
-      actions: [
-        'sns:Publish'
-      ],
-      resources: [
-        props.topic.topicArn
-      ]
-    }))
-  }
-}
