@@ -5,13 +5,12 @@ import { Stream } from 'aws-cdk-lib/aws-kinesis'
 import { Duration, Stack } from 'aws-cdk-lib'
 import { StringListParameter } from 'aws-cdk-lib/aws-ssm'
 import { PolicyStatement, Role, ServicePrincipal } from 'aws-cdk-lib/aws-iam'
-import { MetricFilter, RetentionDays } from 'aws-cdk-lib/aws-logs'
+import { RetentionDays } from 'aws-cdk-lib/aws-logs'
 import { StartingPosition } from 'aws-cdk-lib/aws-lambda'
 import { Topic } from 'aws-cdk-lib/aws-sns'
-import { Alarm, AlarmProps, ComparisonOperator, Metric, TreatMissingData } from 'aws-cdk-lib/aws-cloudwatch'
-import { SnsAction } from 'aws-cdk-lib/aws-cloudwatch-actions'
 import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs'
 import { Queue } from 'aws-cdk-lib/aws-sqs'
+import { setupLambdaAlarms, setupQueueAlarms } from './alarms'
 
 /**
  * Properties needed to create a new Sniffles instance
@@ -81,12 +80,6 @@ interface SetupFilterLambdaProps {
   deadLetterQueue: Queue
 }
 
-interface SetupLambdaAlarmsProps {
-  lambda: NodejsFunction
-  topic: Topic
-  idPrefix: string
-}
-
 /**
  * Sniffles is a self contained solution for getting log based alarms to destinations of your choosing
  * An automatic Log subscriber will subscribe log groups to a Kinesis stream while another lambda will evaluate if a log row should raise an alarm or not
@@ -121,7 +114,8 @@ export class Sniffles extends Construct {
       exclusionPatterns: this.setupLogGroupExclusionPatterns(props?.subscribeLogGroupsProps?.exclusionPatterns),
       cloudWatchRole: role
     })
-    this.setupLambdaMetricAlarms({
+    setupLambdaAlarms({
+      stack: this,
       lambda: subscriptionLambda,
       topic: this.cloudWatchTopic,
       idPrefix: 'Subscription'
@@ -135,7 +129,8 @@ export class Sniffles extends Construct {
       snsTopic: this.errorLogTopic,
       deadLetterQueue: filterDLQ
     })
-    this.setupLambdaMetricAlarms({
+    setupLambdaAlarms({
+      stack: this,
       lambda: filterLambda,
       topic: this.cloudWatchTopic,
       idPrefix: 'Filter'
@@ -195,22 +190,12 @@ export class Sniffles extends Construct {
     const queue = new Queue(this, 'FilterDLQ', {
       retentionPeriod: Duration.days(14)
     })
-    const messagesInQueueAlarm = new Alarm(this, 'DLQAlarm', {
-      evaluationPeriods: 60,
-      threshold: 1,
-      datapointsToAlarm: 1,
-      comparisonOperator: ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
-      treatMissingData: TreatMissingData.MISSING,
-      metric: new Metric({
-        namespace: 'AWS/SQS',
-        metricName: 'ApproximateNumberOfMessagesDelayed',
-        dimensionsMap: {
-          QueueName: queue.queueName
-        },
-        period: Duration.minutes(1)
-      })
+    setupQueueAlarms({
+      stack: this,
+      id: 'DLQAlarm',
+      queue,
+      topic
     })
-    messagesInQueueAlarm.addAlarmAction(new SnsAction(topic))
     return queue
   }
 
@@ -314,80 +299,5 @@ export class Sniffles extends Construct {
     }))
 
     return lambda
-  }
-
-  private setupLambdaMetricAlarms (props: SetupLambdaAlarmsProps): Alarm[] {
-    const { lambda, topic, idPrefix } = props
-    const functionName = lambda.functionName
-    const account = Stack.of(this).account
-    const region = Stack.of(this).region
-
-    const alarms: Alarm[] = []
-
-    const namespace = 'sniffles-log-errors'
-    const logErrorsMetricName = functionName
-    new MetricFilter(this, `${idPrefix}MetricFilter`, {
-      filterPattern: {
-        logPatternString: '"ERROR"'
-      },
-      logGroup: lambda.logGroup,
-      metricName: logErrorsMetricName,
-      metricValue: '1',
-      metricNamespace: namespace
-    })
-
-    const logGroupLink = `https://${region}.console.aws.amazon.com/cloudwatch/home?region=${region}#logsV2:log-groups/log-group/$252Faws$252Flambda$252F${functionName}`
-    const commonAlarmProps: Pick<AlarmProps, 'evaluationPeriods' | 'threshold' | 'datapointsToAlarm' | 'comparisonOperator' | 'treatMissingData'> = {
-      evaluationPeriods: 1,
-      threshold: 1,
-      datapointsToAlarm: 1,
-      comparisonOperator: ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
-      treatMissingData: TreatMissingData.MISSING
-    }
-
-    alarms.push(new Alarm(this, `${idPrefix}LogErrorAlarm`, {
-      alarmName: `${functionName} logged an error`,
-      alarmDescription: `Lambda function ${functionName} in ${account} logged an error. ${logGroupLink}/log-events$3FfilterPattern$3D$2522ERROR$2522`,
-      ...commonAlarmProps,
-      metric: new Metric({
-        namespace,
-        metricName: logErrorsMetricName,
-        statistic: 'sum',
-        period: Duration.minutes(1)
-      })
-    }))
-
-    alarms.push(new Alarm(this, `${idPrefix}ThrottledAlarm`, {
-      alarmName: `${functionName} was throttled`,
-      alarmDescription: `Lambda function ${functionName} in ${account} was throttled. ${logGroupLink}`,
-      ...commonAlarmProps,
-      metric: new Metric({
-        namespace: 'AWS/Lambda',
-        metricName: 'Throttles',
-        statistic: 'sum',
-        dimensionsMap: {
-          FunctionName: functionName
-        },
-        period: Duration.minutes(1)
-      })
-    }))
-
-    alarms.push(new Alarm(this, `${idPrefix}ErrorExitAlarm`, {
-      alarmName: `${functionName} exited with an error`,
-      alarmDescription: `Lambda function ${functionName} in ${account} exited with an error. ${logGroupLink}`,
-      ...commonAlarmProps,
-      metric: new Metric({
-        namespace: 'AWS/Lambda',
-        metricName: 'Errors',
-        statistic: 'sum',
-        dimensionsMap: {
-          FunctionName: functionName
-        },
-        period: Duration.minutes(1)
-      })
-    }))
-
-    alarms.forEach((alarm: Alarm): void => alarm.addAlarmAction(new SnsAction(topic)))
-    return alarms
   }
 }
