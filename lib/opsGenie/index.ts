@@ -1,4 +1,4 @@
-import { Duration } from 'aws-cdk-lib'
+import { Duration, Stack } from 'aws-cdk-lib'
 import { PolicyStatement } from 'aws-cdk-lib/aws-iam'
 import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs'
 import { RetentionDays } from 'aws-cdk-lib/aws-logs'
@@ -26,40 +26,17 @@ export interface OpsGenieForwarderProps {
  * Formats and forwards logs to an SNS Topic
  * Messages will be formatted to work with OpsGenie SNS hooks
  */
-export class OpsGenieForwarder extends NodejsFunction {
+export class OpsGenieForwarder extends Stack {
   constructor (scope: Construct, id: string, props: OpsGenieForwarderProps) {
-    super(scope, id, {
-      entry: join(__dirname, 'forwarderLambda.ts'),
-      handler: 'handler',
-      memorySize: 128,
-      timeout: Duration.seconds(3),
-      logRetention: RetentionDays.ONE_YEAR,
-      bundling: {
-        minify: true,
-        externalModules: ['aws-sdk'],
-        sourceMap: false
-      },
-      environment: {
-        topic: props.opsGenieTopic.topicArn
-      }
-    })
+    super(scope, id)
 
-    this.addToRolePolicy(new PolicyStatement({
-      actions: [
-        'sns:Publish'
-      ],
-      resources: [
-        props.opsGenieTopic.topicArn
-      ]
-    }))
-
+    const lambda = this.setupLambda(props.opsGenieTopic)
     setupLambdaAlarms({
       idPrefix: 'OpsGenie',
       stack: this,
-      lambda: this,
+      lambda,
       topic: props.cloudWatchTopic
     })
-
     this.setupDLQ(props.cloudWatchTopic)
   }
 
@@ -74,5 +51,33 @@ export class OpsGenieForwarder extends NodejsFunction {
       topic
     })
     return queue
+  }
+
+  private setupLambda (topic: Topic): NodejsFunction {
+    const lambda = new NodejsFunction(this, 'Forwarder', {
+      entry: join(__dirname, 'forwarderLambda.ts'),
+      handler: 'handler',
+      memorySize: 128,
+      timeout: Duration.seconds(3),
+      logRetention: RetentionDays.ONE_YEAR,
+      bundling: {
+        minify: true,
+        externalModules: ['aws-sdk'],
+        sourceMap: false
+      },
+      environment: {
+        topic: topic.topicArn
+      }
+    })
+
+    lambda.addToRolePolicy(new PolicyStatement({
+      actions: [
+        'sns:Publish'
+      ],
+      resources: [
+        topic.topicArn
+      ]
+    }))
+    return lambda
   }
 }
