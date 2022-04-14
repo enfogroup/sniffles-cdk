@@ -32,14 +32,14 @@ export class OpsGenieForwarder extends Construct {
   constructor (scope: Construct, id: string, props: OpsGenieForwarderProps) {
     super(scope, id)
 
-    this.lambda = this.setupLambda(props.opsGenieTopic)
+    const queue = this.setupDLQ(props.cloudWatchTopic)
+    this.lambda = this.setupLambda(props.opsGenieTopic, queue)
     setupLambdaAlarms({
       idPrefix: 'OpsGenie',
       stack: this,
       lambda: this.lambda,
       topic: props.cloudWatchTopic
     })
-    this.setupDLQ(props.cloudWatchTopic)
   }
 
   private setupDLQ (topic: Topic): Queue {
@@ -55,7 +55,7 @@ export class OpsGenieForwarder extends Construct {
     return queue
   }
 
-  private setupLambda (topic: Topic): NodejsFunction {
+  private setupLambda (topic: Topic, queue: Queue): NodejsFunction {
     const lambda = new NodejsFunction(this, 'Forwarder', {
       entry: join(__dirname, 'forwarderLambda.ts'),
       handler: 'handler',
@@ -69,7 +69,8 @@ export class OpsGenieForwarder extends Construct {
       },
       environment: {
         topic: topic.topicArn
-      }
+      },
+      deadLetterQueue: queue
     })
 
     lambda.addToRolePolicy(new PolicyStatement({
