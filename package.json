@@ -8,6 +8,7 @@
     "name": "Enfo COPS",
     "email": "cops-aws@enfogroup.com"
   },
+  "license": "MIT",
   "repository": {
     "url": "https://github.com/enfogroup/sniffles-cdk.git"
   },
@@ -59,6 +60,18 @@
     "fp-ts": "^2.11.9",
     "jspath": "^0.4.0",
     "ramda": "^0.28.0"
+  },
+  "bundledDependencies": [
+    "@enfo/aws-secrets",
+    "@enfo/env-vars",
+    "aws-lambda",
+    "fp-ts",
+    "jspath",
+    "ramda"
+  ],
+  "peerDependencies": {
+    "aws-cdk-lib": "^2.3.0",
+    "constructs": "^10.0.23"
   },
   "stability": "experimental",
   "jsii": {
