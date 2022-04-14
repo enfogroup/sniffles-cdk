@@ -1,5 +1,6 @@
 import { parseEnvString } from '@enfo/env-vars'
 import * as SNS from 'aws-sdk/clients/sns'
+// @ts-ignore
 import take from 'ramda/src/take'
 
 import { LogMessage } from '../filterLambda'

@@ -6,6 +6,7 @@ import * as SNS from 'aws-sdk/clients/sns'
 import { Option, tryCatch as optTryCatch, chain as optchain, map as optmap, getOrElse as optGetOrElse, none, some } from 'fp-ts/lib/Option'
 import { apply as jspathApply } from 'jspath'
 
+// @ts-ignore
 import { anyPass, both, chain, cond, endsWith, filter, flip, gt, head, ifElse, includes, isEmpty, length, map, match, path, pathSatisfies, pipe, prop, startsWith, T, tail, tap, test, toString, trim, reject } from 'ramda'
 import { gunzipSync } from 'zlib'
 
@@ -80,7 +81,7 @@ const groupMatch = (re: RegExp) =>
 // istanbul ignore next
 const toRegExp = pipe<any, string[], RegExp>(
   match(/^\/([^/]+)\/([gimsuy]*)$/),
-  ([_, re, flags]) => new RegExp(re, flags)
+  ([_, re, flags]: [string, string, string]) => new RegExp(re, flags)
 )
 const base64decode = (str: string) => Buffer.from(str, 'base64')
 const unzip = (buf: Buffer) => {
@@ -141,7 +142,7 @@ export const handler = (event: KinesisStreamEvent) =>
       chain(parseRecord),
       filter(pathSatisfies(anyPass(inclusionFunctions))(['logEvents', 0, 'message'])) as unknown as (x: LogMessages) => LogMessages,
       reject(pathSatisfies(anyPass(exclusionFunctions))(['logEvents', 0, 'message'])) as unknown as (x: LogMessages) => LogMessages,
-      tap((x) => console.log(`Found ${x.length} entries`)),
+      tap((x: any[]) => console.log(`Found ${x.length} entries`)),
       map(publishLog),
       Promise.all.bind(Promise)
     )(event))

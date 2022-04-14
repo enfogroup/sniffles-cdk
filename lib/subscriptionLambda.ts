@@ -2,6 +2,7 @@ import * as CloudWatchLogs from 'aws-sdk/clients/cloudwatchlogs'
 import { SSMCache } from '@enfo/aws-secrets'
 import { parseEnvString, parseVariables, VariableType } from '@enfo/env-vars'
 
+// @ts-ignore
 import { tap, map, trim, pipe, concat, anyPass, filter, reject } from 'ramda'
 
 const ssmCache = new SSMCache({
