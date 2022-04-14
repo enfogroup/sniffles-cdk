@@ -20,42 +20,32 @@ import { setupLambdaAlarms, setupQueueAlarms } from './alarms'
  */
 export interface SnifflesProps {
   /**
-   * Properties for subscribeLogGroups lambda
+   * Regular expressions which will be used to match log groups
+   * For example "^/aws/lambda/.*-prod-.*" would match lambda log groups with "-prod-" in their names
+   * Defaults to "^/aws/lambda/.*-prod-.*"
    */
-  readonly subscribeLogGroupsProps?: {
-    /**
-     * Regular expressions which will be used to match log groups
-     * For example "^/aws/lambda/.*-prod-.*" would match lambda log groups with "-prod-" in their names
-     * Defaults to "^/aws/lambda/.*-prod-.*"
-     */
-    inclusionPatterns?: string[]
-    /**
-     * Regular expressions which will be used to exclude log groups from matching
-     * Defaults to "^$" (no matches)
-     */
-    exclusionPatterns?: string[]
-  }
+  readonly subscriptionInclusionPatterns?: string[]
   /**
-   * Properties for filterLogs lambda
+   * Regular expressions which will be used to exclude log groups from matching
+   * Defaults to "^$" (no matches)
    */
-  readonly filterLogsProps?: {
-    /**
-     * Regular expressions which will be used to forward log messages
-     * For example '{ .level = "error" }' would match objects logged with key level and value "error" present
-     * Defaults to '{ .level === "error" }'
-     */
-    inclusionPatterns?: string[]
-    /**
-     * Regular expressions which will be used to exclude log messages from being matched
-     * Defaults to "^$" (no matches)
-     */
-    exclusionPatterns?: string[]
-    /**
-     * SNS topic to publish matches to
-     * If no topic is supplied one will be generated
-     */
-    topic?: Topic
-  }
+   readonly subscriptionExclusionPatterns?: string[]
+  /**
+   * Regular expressions which will be used to forward log messages
+   * For example '{ .level = "error" }' would match objects logged with key level and value "error" present
+   * Defaults to '{ .level === "error" }'
+   */
+   readonly filterInclusionPatterns?: string[]
+  /**
+   * Regular expressions which will be used to exclude log messages from being matched
+   * Defaults to "^$" (no matches)
+   */
+   readonly filterExclusionPatterns?: string[]
+  /**
+   * SNS topic to publish filter matches to
+   * If no topic is supplied one will be generated
+   */
+   readonly errorLogTopic?: Topic
   /**
    * Optional Kinesis stream. Will be used to subscribe all matches from the subscribeLogGroups lambda
    * If no stream is supplied one will be created
@@ -108,13 +98,13 @@ export class Sniffles extends Construct {
     this.kinesisStream = this.setupKinesisStream(props?.stream)
     const role = this.setupRoleForCloudWatch(this.kinesisStream)
 
-    this.errorLogTopic = this.setupSnsTopic('FilterLogsTopic', props?.filterLogsProps?.topic)
+    this.errorLogTopic = this.setupSnsTopic('FilterLogsTopic', props?.errorLogTopic)
     this.cloudWatchTopic = this.setupSnsTopic('CloudWatchTopic', props?.cloudWatchTopic)
 
     const subscriptionLambda = this.subscriptionLambda({
       kinesisStream: this.kinesisStream,
-      inclusionPatterns: this.setupLogGroupInclusionPatterns(props?.subscribeLogGroupsProps?.inclusionPatterns),
-      exclusionPatterns: this.setupLogGroupExclusionPatterns(props?.subscribeLogGroupsProps?.exclusionPatterns),
+      inclusionPatterns: this.setupLogGroupInclusionPatterns(props?.subscriptionInclusionPatterns),
+      exclusionPatterns: this.setupLogGroupExclusionPatterns(props?.subscriptionExclusionPatterns),
       cloudWatchRole: role
     })
     setupLambdaAlarms({
@@ -127,8 +117,8 @@ export class Sniffles extends Construct {
     const filterDLQ = this.setupFilterDLQ(this.cloudWatchTopic)
     const filterLambda = this.setupFilterLambda({
       kinesisStream: this.kinesisStream,
-      inclusionPatterns: this.setupFilterLogsInclusionPatterns(props?.filterLogsProps?.inclusionPatterns),
-      exclusionPatterns: this.setupFilterLogsExclusionPatterns(props?.filterLogsProps?.exclusionPatterns),
+      inclusionPatterns: this.setupFilterLogsInclusionPatterns(props?.filterInclusionPatterns),
+      exclusionPatterns: this.setupFilterLogsExclusionPatterns(props?.filterExclusionPatterns),
       snsTopic: this.errorLogTopic,
       deadLetterQueue: filterDLQ
     })

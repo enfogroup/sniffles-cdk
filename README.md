@@ -55,19 +55,15 @@ export class MyCoolStack extends Stack {
 
 ### Configuration options
 
-All parameters on all levels are optional. Below you will find an example of a potential configuration.
+All parameters are optional. Below you will find an example of a potential configuration.
 
 ```typescript
 new Sniffles(this, 'Sniffles', {
-  subscribeLogGroupsProps: {
-    inclusionPatterns: ['^/aws/lambda/prefix-.*'], // regular expressions for log groups which are of interest
-    exclusionPatterns: ['.*-test-.*'] // regular expressions for log groups which should be ignored. Trumps inclusionPatterns
-  },
-  filterLogsProps: {
-    inclusionPatterns: ['{ .level === "error" }', '/ERROR/'], // regular expressions for log lines which are considered alarms
-    exclusionPatterns: ['{ .someKey === "someValue" }'], // regular expressions for log lines which are considered safe. Trumps inclusionPatterns
-    topic: new Topic(this, 'ErrorLogTopic') // topic to publish log lines considered errors to. If none is provided one will be created
-  },
+  subscriptionInclusionPatterns: ['^/aws/lambda/prefix-.*'], // regular expressions for log groups which are of interest
+  subscriptionExclusionPatterns: ['.*-test-.*'], // regular expressions for log groups which should be ignored. Trumps inclusionPatterns
+  filterInclusionPatterns: ['{ .level === "error" }', '/ERROR/'], // regular expressions for log lines which are considered alarms
+  filterExclusionPatterns: ['{ .someKey === "someValue" }'], // regular expressions for log lines which are considered safe. Trumps inclusionPatterns
+  errorLogTopic: new Topic(this, 'ErrorLogTopic'), // topic to publish log lines considered errors to. If none is provided one will be created
   stream: new Stream(this, 'SubscriptionStream'), // kinesis stream which log groups will be subscribed to. If none is provided one will be created
   cloudWatchTopic: new Topic(this, 'CloudWatchTopic') // topic to publish internal errors to. If none is provided one will be created
 })

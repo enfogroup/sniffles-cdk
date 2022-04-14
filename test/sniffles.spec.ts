@@ -18,9 +18,7 @@ describe('Sniffles', () => {
     it('should be possible to set values to log group inclusions', () => {
       const stack = new Stack()
       new Sniffles(stack, 'Test', {
-        subscribeLogGroupsProps: {
-          inclusionPatterns: ['abc', 'def', 'ghi']
-        }
+        subscriptionInclusionPatterns: ['abc', 'def', 'ghi']
       })
 
       expect(stack).toHaveResource('AWS::SSM::Parameter', {
@@ -31,9 +29,7 @@ describe('Sniffles', () => {
     it('should be possible to set values to log group exclusions', () => {
       const stack = new Stack()
       new Sniffles(stack, 'Test', {
-        subscribeLogGroupsProps: {
-          exclusionPatterns: ['abc', 'def', 'ghi']
-        }
+        subscriptionExclusionPatterns: ['abc', 'def', 'ghi']
       })
 
       expect(stack).toHaveResource('AWS::SSM::Parameter', {
@@ -44,9 +40,7 @@ describe('Sniffles', () => {
     it('should be possible to set values to filter inclusions', () => {
       const stack = new Stack()
       new Sniffles(stack, 'Test', {
-        filterLogsProps: {
-          inclusionPatterns: ['abc', 'def', 'ghi']
-        }
+        filterInclusionPatterns: ['abc', 'def', 'ghi']
       })
 
       expect(stack).toHaveResource('AWS::SSM::Parameter', {
@@ -57,9 +51,7 @@ describe('Sniffles', () => {
     it('should be possible to set values to filter exclusions', () => {
       const stack = new Stack()
       new Sniffles(stack, 'Test', {
-        filterLogsProps: {
-          exclusionPatterns: ['abc', 'def', 'ghi']
-        }
+        filterExclusionPatterns: ['abc', 'def', 'ghi']
       })
 
       expect(stack).toHaveResource('AWS::SSM::Parameter', {
@@ -152,11 +144,9 @@ describe('Sniffles', () => {
     it('should use the filter topic if supplied', () => {
       const stack = new Stack()
       new Sniffles(stack, 'Test', {
-        filterLogsProps: {
-          topic: new Topic(stack, 'Topic', {
-            topicName: 'filter'
-          })
-        }
+        errorLogTopic: new Topic(stack, 'Topic', {
+          topicName: 'filter'
+        })
       })
 
       expect(stack).toCountResources('AWS::SNS::Topic', 2)
