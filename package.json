@@ -19,7 +19,7 @@
     "build": "jsii",
     "build:watch": "jsii --watch",
     "package": "jsii-pacmak",
-    "clean": "rm -f lib/*.js lib/*.d.ts test/*.js test/*.d.ts",
+    "clean": "rm -f lib/*.js lib/*.d.ts lib/opsGenie/*.js lib/opsGenie/*.d.ts test/*.js test/*.d.ts",
     "test": "npm run clean && jest --runInBand --coverage",
     "lint": "npx eslint --ext .ts .",
     "lint:fix": "npx eslint --fix --ext .ts ."
