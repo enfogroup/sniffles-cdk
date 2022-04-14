@@ -57,7 +57,8 @@ describe('OpsGenie Forwarder Construct', () => {
 
       new OpsGenieForwarder(stack, 'Test', {
         opsGenieTopic: new Topic(stack, 'Topic'),
-        cloudWatchTopic: new Topic(stack, 'CWTopic')
+        cloudWatchTopic: new Topic(stack, 'CWTopic'),
+        errorLogTopic: new Topic(stack, 'ErrorTopic')
       })
 
       const template = Template.fromStack(stack)
@@ -76,7 +77,8 @@ describe('OpsGenie Forwarder Construct', () => {
       const stack = new Stack()
       new OpsGenieForwarder(stack, 'Test', {
         opsGenieTopic: new Topic(stack, 'Topic'),
-        cloudWatchTopic: new Topic(stack, 'CWTopic')
+        cloudWatchTopic: new Topic(stack, 'CWTopic'),
+        errorLogTopic: new Topic(stack, 'ErrorTopic')
       })
 
       expect(stack).toCountResources('AWS::CloudWatch::Alarm', 4) // 3 + 1 for the DLQ
@@ -86,7 +88,8 @@ describe('OpsGenie Forwarder Construct', () => {
       const stack = new Stack()
       new OpsGenieForwarder(stack, 'Test', {
         opsGenieTopic: new Topic(stack, 'Topic'),
-        cloudWatchTopic: new Topic(stack, 'CWTopic')
+        cloudWatchTopic: new Topic(stack, 'CWTopic'),
+        errorLogTopic: new Topic(stack, 'ErrorTopic')
       })
 
       expect(stack).toHaveResource('AWS::CloudWatch::Alarm', {
@@ -100,7 +103,8 @@ describe('OpsGenie Forwarder Construct', () => {
       const stack = new Stack()
       new OpsGenieForwarder(stack, 'Test', {
         opsGenieTopic: new Topic(stack, 'Topic'),
-        cloudWatchTopic: new Topic(stack, 'CWTopic')
+        cloudWatchTopic: new Topic(stack, 'CWTopic'),
+        errorLogTopic: new Topic(stack, 'ErrorTopic')
       })
 
       expect(stack).toCountResources('AWS::SQS::Queue', 1)

@@ -1,5 +1,6 @@
 import { Duration } from 'aws-cdk-lib'
 import { PolicyStatement } from 'aws-cdk-lib/aws-iam'
+import { SnsEventSource } from 'aws-cdk-lib/aws-lambda-event-sources'
 import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs'
 import { RetentionDays } from 'aws-cdk-lib/aws-logs'
 import { Topic } from 'aws-cdk-lib/aws-sns'
@@ -21,6 +22,10 @@ export interface OpsGenieForwarderProps {
    * SNS Topic to publish internal alarms to
    */
   cloudWatchTopic: Topic
+  /**
+   * SNS Topic which filtered log lines are published to. Will be used as an event source
+   */
+  errorLogTopic: Topic
 }
 
 /**
@@ -28,16 +33,16 @@ export interface OpsGenieForwarderProps {
  * Messages will be formatted to work with OpsGenie SNS hooks
  */
 export class OpsGenieForwarder extends Construct {
-  public lambda: NodejsFunction
   constructor (scope: Construct, id: string, props: OpsGenieForwarderProps) {
     super(scope, id)
 
     const queue = this.setupDLQ(props.cloudWatchTopic)
-    this.lambda = this.setupLambda(props.opsGenieTopic, queue)
+    const lambda = this.setupLambda(props.opsGenieTopic, queue)
+    lambda.addEventSource(new SnsEventSource(props.errorLogTopic))
     setupLambdaAlarms({
       idPrefix: 'OpsGenie',
       stack: this,
-      lambda: this.lambda,
+      lambda,
       topic: props.cloudWatchTopic
     })
   }
@@ -48,7 +53,7 @@ export class OpsGenieForwarder extends Construct {
     })
     setupQueueAlarms({
       stack: this,
-      id: 'DLQAlarm',
+      id: 'DLQAlarms',
       queue,
       topic
     })
