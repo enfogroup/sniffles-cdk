@@ -57,5 +57,10 @@
     "fp-ts": "^2.11.9",
     "jspath": "^0.4.0",
     "ramda": "^0.28.0"
+  },
+  "stability": "experimental",
+  "jsii": {
+    "outdir": ".dist",
+    "versionFormat": "full"
   }
 }
