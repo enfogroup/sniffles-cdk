@@ -85,7 +85,7 @@ Sniffles is only capable of adding subscriptions, not removing them. Updating th
 
 The Sniffles architecture is self contained and written to report internal errors that occur.
 
-![Sniffles Architecture](https://github.com/enfogroup/sniffles-cdk/media/sniffles.png)
+![Sniffles Architecture](https://github.com/enfogroup/sniffles-cdk/blob/master/media/sniffles.png)
 
 Explanation of components:
 
@@ -139,7 +139,7 @@ The subject will then be "111122223333 /aws/lambda/example Something informative
 
 The OpsGenieForwarder is self contained and written to report internal errors that occur.
 
-![OpsGenieForwarder Architecture](https://github.com/enfogroup/sniffles-cdk/media/opsGenieForwarder.png)
+![OpsGenieForwarder Architecture](https://github.com/enfogroup/sniffles-cdk/blob/master/media/opsGenieForwarder.png)
 
 Explanation of components:
 
