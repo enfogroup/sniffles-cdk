@@ -1,10 +1,15 @@
 {
   "name": "@enfo/sniffles",
   "version": "0.0.1",
+  "description": "Automatic formatting and forwarding of CloudWatch logs based alarms in AWS using the CDK",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
   "author": {
-    "name": "Urban Pettersson"
+    "name": "Enfo COPS",
+    "email": "cops-aws@enfogroup.com"
+  },
+  "repository": {
+    "url": "https://github.com/enfogroup/sniffles-cdk.git"
   },
   "scripts": {
     "prepublishOnly": "npx pinst --disable",
@@ -40,6 +45,7 @@
     "eslint-plugin-promise": "^6.0.0",
     "husky": "^7.0.4",
     "jest": "^27.4.5",
+    "jsii": "^1.56.0",
     "pinst": "^3.0.0",
     "ts-jest": "^27.1.2",
     "typescript": "^4.5.4"
