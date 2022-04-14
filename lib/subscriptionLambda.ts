@@ -1,4 +1,4 @@
-import CloudWatchLogs from 'aws-sdk/clients/cloudwatchlogs'
+import * as CloudWatchLogs from 'aws-sdk/clients/cloudwatchlogs'
 import { SSMCache } from '@enfo/aws-secrets'
 import { parseEnvString, parseVariables, VariableType } from '@enfo/env-vars'
 

@@ -2,7 +2,7 @@
 import { SSMCache } from '@enfo/aws-secrets'
 import { parseEnvString, parseVariables, VariableType } from '@enfo/env-vars'
 import { KinesisStreamEvent, KinesisStreamRecord } from 'aws-lambda'
-import SNS from 'aws-sdk/clients/sns'
+import * as SNS from 'aws-sdk/clients/sns'
 import { Option, tryCatch as optTryCatch, chain as optchain, map as optmap, getOrElse as optGetOrElse, none, some } from 'fp-ts/lib/Option'
 import { apply as jspathApply } from 'jspath'
 
@@ -35,12 +35,12 @@ import trim from 'ramda/src/trim'
 import reject from 'ramda/src/reject'
 import { gunzipSync } from 'zlib'
 
-interface LogEvent {
+export interface LogEvent {
   readonly id: string
   readonly timestamp: number
   readonly message: string
 }
-type LogEvents = ReadonlyArray<LogEvent>
+export type LogEvents = LogEvent[]
 export interface LogMessage {
   readonly messageType: string
   readonly owner: string
@@ -50,7 +50,7 @@ export interface LogMessage {
   readonly logEvents: LogEvents
   readonly logLink?: string
 }
-type LogMessages = ReadonlyArray<LogMessage>
+export type LogMessages = LogMessage[]
 
 const { inclusions, topicArn, exclusions } = parseVariables<{
   inclusions: string,

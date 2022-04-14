@@ -17,15 +17,15 @@ export interface OpsGenieForwarderProps {
   /**
    * SNS Topic to publish formatted logs to
    */
-  opsGenieTopic: Topic
+  readonly opsGenieTopic: Topic
   /**
    * SNS Topic to publish internal alarms to
    */
-  cloudWatchTopic: Topic
+  readonly cloudWatchTopic: Topic
   /**
    * SNS Topic which filtered log lines are published to. Will be used as an event source
    */
-  errorLogTopic: Topic
+  readonly errorLogTopic: Topic
 }
 
 /**

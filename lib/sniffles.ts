@@ -22,7 +22,7 @@ export interface SnifflesProps {
   /**
    * Properties for subscribeLogGroups lambda
    */
-  subscribeLogGroupsProps?: {
+  readonly subscribeLogGroupsProps?: {
     /**
      * Regular expressions which will be used to match log groups
      * For example "^/aws/lambda/.*-prod-.*" would match lambda log groups with "-prod-" in their names
@@ -38,7 +38,7 @@ export interface SnifflesProps {
   /**
    * Properties for filterLogs lambda
    */
-  filterLogsProps?: {
+  readonly filterLogsProps?: {
     /**
      * Regular expressions which will be used to forward log messages
      * For example '{ .level = "error" }' would match objects logged with key level and value "error" present
@@ -60,12 +60,12 @@ export interface SnifflesProps {
    * Optional Kinesis stream. Will be used to subscribe all matches from the subscribeLogGroups lambda
    * If no stream is supplied one will be created
    */
-  stream?: Stream
+  readonly stream?: Stream
   /**
    * Optional topic used to send alarms to when internal Sniffles resources encounter issues
    * If no topic is supplied one will be created
    */
-  cloudWatchTopic?: Topic
+  readonly cloudWatchTopic?: Topic
 }
 
 interface SetupSubscriptionLambdaProps {
