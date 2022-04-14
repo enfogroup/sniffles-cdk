@@ -2,14 +2,7 @@ import * as CloudWatchLogs from 'aws-sdk/clients/cloudwatchlogs'
 import { SSMCache } from '@enfo/aws-secrets'
 import { parseEnvString, parseVariables, VariableType } from '@enfo/env-vars'
 
-import tap from 'ramda/src/tap'
-import map from 'ramda/src/map'
-import trim from 'ramda/src/trim'
-import pipe from 'ramda/src/pipe'
-import concat from 'ramda/src/concat'
-import anyPass from 'ramda/src/anyPass'
-import filter from 'ramda/src/filter'
-import reject from 'ramda/src/reject'
+import { tap, map, trim, pipe, concat, anyPass, filter, reject } from 'ramda'
 
 const ssmCache = new SSMCache({
   region: parseEnvString('AWS_REGION', 'eu-west-1'),
