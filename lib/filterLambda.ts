@@ -2,13 +2,13 @@
 import { SSMCache } from '@enfo/aws-secrets'
 import { parseEnvString, parseVariables, VariableType } from '@enfo/env-vars'
 import { KinesisStreamEvent, KinesisStreamRecord } from 'aws-lambda'
-import * as SNS from 'aws-sdk/clients/sns'
 import { Option, tryCatch as optTryCatch, chain as optchain, map as optmap, getOrElse as optGetOrElse, none, some } from 'fp-ts/lib/Option'
 import { apply as jspathApply } from 'jspath'
 
 // @ts-ignore
 import { anyPass, both, chain, cond, endsWith, filter, flip, gt, head, ifElse, includes, isEmpty, length, map, match, path, pathSatisfies, pipe, prop, startsWith, T, tail, tap, test, toString, trim, reject } from 'ramda'
 import { gunzipSync } from 'zlib'
+const SNS = require('aws-sdk/clients/sns')
 
 export interface LogEvent {
   readonly id: string

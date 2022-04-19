@@ -1,9 +1,10 @@
-import * as CloudWatchLogs from 'aws-sdk/clients/cloudwatchlogs'
+import { DescribeLogGroupsResponse, LogGroup } from 'aws-sdk/clients/cloudwatchlogs'
 import { SSMCache } from '@enfo/aws-secrets'
 import { parseEnvString, parseVariables, VariableType } from '@enfo/env-vars'
-
 // @ts-ignore
 import { tap, map, trim, pipe, concat, anyPass, filter, reject } from 'ramda'
+
+const CloudWatchLogs = require('aws-sdk/clients/cloudwatchlogs')
 
 const ssmCache = new SSMCache({
   region: parseEnvString('AWS_REGION', 'eu-west-1'),
@@ -60,9 +61,9 @@ const patternsToFunctions = map(
   )
 )
 // istanbul ignore next
-const getLogGroups = (token?: string): Promise<CloudWatchLogs.LogGroup[]> =>
+const getLogGroups = (token?: string): Promise<LogGroup[]> =>
   cwl.describeLogGroups({ nextToken: token }).promise()
-    .then(({ logGroups, nextToken }) =>
+    .then(({ logGroups, nextToken }: DescribeLogGroupsResponse) =>
       !nextToken
         ? logGroups ?? []
         : getLogGroups(nextToken).then(concat(logGroups ?? [])))
@@ -71,8 +72,8 @@ const getLogGroups = (token?: string): Promise<CloudWatchLogs.LogGroup[]> =>
 export const getLogGroupsAndPatterns = (): Promise<[string[], string[], string[]]> =>
   Promise.all([
     getLogGroups()
-      .then((logGroups: CloudWatchLogs.LogGroup[]): string[] => {
-        return logGroups.reduce((acc: string[], curr: CloudWatchLogs.LogGroup): string[] => {
+      .then((logGroups: LogGroup[]): string[] => {
+        return logGroups.reduce((acc: string[], curr: LogGroup): string[] => {
           if (!curr.logGroupName) {
             return acc
           }

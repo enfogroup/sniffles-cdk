@@ -1,11 +1,12 @@
 import { parseEnvString } from '@enfo/env-vars'
-import * as SNS from 'aws-sdk/clients/sns'
 // @ts-ignore
 import { take } from 'ramda'
+import { PublishInput } from 'aws-sdk/clients/sns'
+import { SNSEvent } from 'aws-lambda'
 
 import { LogMessage } from '../filterLambda'
 
-import { SNSEvent } from 'aws-lambda'
+const SNS = require('aws-sdk/clients/sns')
 
 interface LogLine {
   message: string
@@ -15,7 +16,7 @@ const sns = new SNS()
 const topic = parseEnvString('topic', { required: true })
 
 // istanbul ignore next
-export const publish = async (input: SNS.PublishInput): Promise<void> => {
+export const publish = async (input: PublishInput): Promise<void> => {
   await sns.publish(input).promise()
 }
 
