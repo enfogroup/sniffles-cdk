@@ -1,7 +1,7 @@
 import { join } from 'path'
 
 import { Construct } from 'constructs'
-import { Stream } from 'aws-cdk-lib/aws-kinesis'
+import { Stream, StreamEncryption } from 'aws-cdk-lib/aws-kinesis'
 import { Duration, Stack } from 'aws-cdk-lib'
 import { StringListParameter } from 'aws-cdk-lib/aws-ssm'
 import { PolicyStatement, Role, ServicePrincipal } from 'aws-cdk-lib/aws-iam'
@@ -9,11 +9,13 @@ import { RetentionDays } from 'aws-cdk-lib/aws-logs'
 import { StartingPosition } from 'aws-cdk-lib/aws-lambda'
 import { Topic } from 'aws-cdk-lib/aws-sns'
 import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs'
-import { Queue } from 'aws-cdk-lib/aws-sqs'
+import { QueueEncryption } from 'aws-cdk-lib/aws-sqs'
+import { Queue, Topic as CompliantTopic } from '@enfo/aws-cdkompliance'
 import { Rule, Schedule } from 'aws-cdk-lib/aws-events'
 import { LambdaFunction } from 'aws-cdk-lib/aws-events-targets'
 
 import { setupLambdaAlarms, setupQueueAlarms } from './alarms'
+import { IKey, Key } from 'aws-cdk-lib/aws-kms'
 
 /**
  * Properties needed to create a new Sniffles instance
@@ -22,23 +24,23 @@ export interface SnifflesProps {
   /**
    * Regular expressions which will be used to match log groups
    * For example "^/aws/lambda/.*-prod-.*" would match lambda log groups with "-prod-" in their names
-   * Defaults to "^/aws/lambda/.*-prod-.*"
+   * Defaults to ["^/aws/lambda/.*-prod-.*"]
    */
   readonly subscriptionInclusionPatterns?: string[]
   /**
    * Regular expressions which will be used to exclude log groups from matching
-   * Defaults to "^$" (no matches)
+   * Defaults to ["^$"] (no matches)
    */
    readonly subscriptionExclusionPatterns?: string[]
   /**
    * Regular expressions which will be used to forward log messages
    * For example '{ .level = "error" }' would match objects logged with key level and value "error" present
-   * Defaults to '{ .level === "error" }'
+   * Defaults to ['{ .level === "error" }']
    */
    readonly filterInclusionPatterns?: string[]
   /**
    * Regular expressions which will be used to exclude log messages from being matched
-   * Defaults to "^$" (no matches)
+   * Defaults to ["^$"] (no matches)
    */
    readonly filterExclusionPatterns?: string[]
   /**
@@ -97,9 +99,12 @@ export class Sniffles extends Construct {
 
     this.kinesisStream = this.setupKinesisStream(props?.stream)
     const role = this.setupRoleForCloudWatch(this.kinesisStream)
+    const defaultSnsKey = Key.fromLookup(this, 'DefaultSnsKey', {
+      aliasName: 'alias/aws/sns'
+    })
 
-    this.errorLogTopic = this.setupSnsTopic('FilterLogsTopic', props?.errorLogTopic)
-    this.cloudWatchTopic = this.setupSnsTopic('CloudWatchTopic', props?.cloudWatchTopic)
+    this.errorLogTopic = this.setupSnsTopic('FilterLogsTopic', defaultSnsKey, props?.errorLogTopic)
+    this.cloudWatchTopic = this.setupSnsTopic('CloudWatchTopic', defaultSnsKey, props?.cloudWatchTopic)
 
     const subscriptionLambda = this.subscriptionLambda({
       kinesisStream: this.kinesisStream,
@@ -160,7 +165,8 @@ export class Sniffles extends Construct {
     }
     return new Stream(this, 'Stream', {
       shardCount: 1,
-      retentionPeriod: Duration.hours(24)
+      retentionPeriod: Duration.hours(24),
+      encryption: StreamEncryption.MANAGED
     })
   }
 
@@ -172,16 +178,19 @@ export class Sniffles extends Construct {
     return role
   }
 
-  private setupSnsTopic (id: string, existingTopic?: Topic): Topic {
+  private setupSnsTopic (id: string, masterKey: IKey, existingTopic?: Topic): Topic {
     if (existingTopic) {
       return existingTopic
     }
-    return new Topic(this, id, {})
+    return new CompliantTopic(this, id, {
+      masterKey
+    })
   }
 
   private setupFilterDLQ (topic: Topic): Queue {
     const queue = new Queue(this, 'FilterDLQ', {
-      retentionPeriod: Duration.days(14)
+      retentionPeriod: Duration.days(14),
+      encryption: QueueEncryption.KMS_MANAGED
     })
     setupQueueAlarms({
       stack: this,

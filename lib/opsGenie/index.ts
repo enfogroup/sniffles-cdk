@@ -4,11 +4,12 @@ import { SnsEventSource } from 'aws-cdk-lib/aws-lambda-event-sources'
 import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs'
 import { RetentionDays } from 'aws-cdk-lib/aws-logs'
 import { Topic } from 'aws-cdk-lib/aws-sns'
-import { Queue } from 'aws-cdk-lib/aws-sqs'
+import { Queue } from '@enfo/aws-cdkompliance'
 import { Construct } from 'constructs'
 import { join } from 'path'
 
 import { setupLambdaAlarms, setupQueueAlarms } from '../alarms'
+import { QueueEncryption } from 'aws-cdk-lib/aws-sqs'
 
 /**
  * Properties needed when creating a new OpsGenieForwarder
@@ -49,7 +50,8 @@ export class OpsGenieForwarder extends Construct {
 
   private setupDLQ (topic: Topic): Queue {
     const queue = new Queue(this, 'DLQ', {
-      retentionPeriod: Duration.days(14)
+      retentionPeriod: Duration.days(14),
+      encryption: QueueEncryption.KMS_MANAGED
     })
     setupQueueAlarms({
       stack: this,
