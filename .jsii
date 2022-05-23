@@ -15,10 +15,18 @@
     "ramda": "^0.28.0"
   },
   "dependencies": {
-    "aws-cdk-lib": "^2.3.0",
-    "constructs": "^10.0.23"
+    "@enfo/aws-cdkompliance": "^0.1.0",
+    "aws-cdk-lib": "^2.25.0",
+    "constructs": "^10.1.15"
   },
   "dependencyClosure": {
+    "@enfo/aws-cdkompliance": {
+      "targets": {
+        "js": {
+          "npm": "@enfo/aws-cdkompliance"
+        }
+      }
+    },
     "aws-cdk-lib": {
       "submodules": {
         "aws-cdk-lib.alexa_ask": {
@@ -382,6 +390,19 @@
             },
             "python": {
               "module": "aws_cdk.aws_batch"
+            }
+          }
+        },
+        "aws-cdk-lib.aws_billingconductor": {
+          "targets": {
+            "dotnet": {
+              "namespace": "Amazon.CDK.AWS.BillingConductor"
+            },
+            "java": {
+              "package": "software.amazon.awscdk.services.billingconductor"
+            },
+            "python": {
+              "module": "aws_cdk.aws_billingconductor"
             }
           }
         },
@@ -1192,6 +1213,19 @@
             }
           }
         },
+        "aws-cdk-lib.aws_forecast": {
+          "targets": {
+            "dotnet": {
+              "namespace": "Amazon.CDK.AWS.Forecast"
+            },
+            "java": {
+              "package": "software.amazon.awscdk.services.forecast"
+            },
+            "python": {
+              "module": "aws_cdk.aws_forecast"
+            }
+          }
+        },
         "aws-cdk-lib.aws_frauddetector": {
           "targets": {
             "dotnet": {
@@ -1374,6 +1408,19 @@
             }
           }
         },
+        "aws-cdk-lib.aws_inspectorv2": {
+          "targets": {
+            "dotnet": {
+              "namespace": "Amazon.CDK.AWS.InspectorV2"
+            },
+            "java": {
+              "package": "software.amazon.awscdk.services.inspectorv2"
+            },
+            "python": {
+              "module": "aws_cdk.aws_inspectorv2"
+            }
+          }
+        },
         "aws-cdk-lib.aws_iot": {
           "targets": {
             "dotnet": {
@@ -1478,6 +1525,19 @@
             }
           }
         },
+        "aws-cdk-lib.aws_iottwinmaker": {
+          "targets": {
+            "dotnet": {
+              "namespace": "Amazon.CDK.AWS.IoTTwinMaker"
+            },
+            "java": {
+              "package": "software.amazon.awscdk.services.iottwinmaker"
+            },
+            "python": {
+              "module": "aws_cdk.aws_iottwinmaker"
+            }
+          }
+        },
         "aws-cdk-lib.aws_iotwireless": {
           "targets": {
             "dotnet": {
@@ -1501,6 +1561,19 @@
             },
             "python": {
               "module": "aws_cdk.aws_ivs"
+            }
+          }
+        },
+        "aws-cdk-lib.aws_kafkaconnect": {
+          "targets": {
+            "dotnet": {
+              "namespace": "Amazon.CDK.AWS.KafkaConnect"
+            },
+            "java": {
+              "package": "software.amazon.awscdk.services.kafkaconnect"
+            },
+            "python": {
+              "module": "aws_cdk.aws_kafkaconnect"
             }
           }
         },
@@ -1543,6 +1616,19 @@
             }
           }
         },
+        "aws-cdk-lib.aws_kinesisanalyticsv2": {
+          "targets": {
+            "dotnet": {
+              "namespace": "Amazon.CDK.AWS.KinesisAnalyticsV2"
+            },
+            "java": {
+              "package": "software.amazon.awscdk.services.kinesisanalyticsv2"
+            },
+            "python": {
+              "module": "aws_cdk.aws_kinesisanalyticsv2"
+            }
+          }
+        },
         "aws-cdk-lib.aws_kinesisfirehose": {
           "targets": {
             "dotnet": {
@@ -1553,6 +1639,19 @@
             },
             "python": {
               "module": "aws_cdk.aws_kinesisfirehose"
+            }
+          }
+        },
+        "aws-cdk-lib.aws_kinesisvideo": {
+          "targets": {
+            "dotnet": {
+              "namespace": "Amazon.CDK.AWS.KinesisVideo"
+            },
+            "java": {
+              "package": "software.amazon.awscdk.services.kinesisvideo"
+            },
+            "python": {
+              "module": "aws_cdk.aws_kinesisvideo"
             }
           }
         },
@@ -1842,6 +1941,19 @@
             }
           }
         },
+        "aws-cdk-lib.aws_mediatailor": {
+          "targets": {
+            "dotnet": {
+              "namespace": "Amazon.CDK.AWS.MediaTailor"
+            },
+            "java": {
+              "package": "software.amazon.awscdk.services.mediatailor"
+            },
+            "python": {
+              "module": "aws_cdk.aws_mediatailor"
+            }
+          }
+        },
         "aws-cdk-lib.aws_memorydb": {
           "targets": {
             "dotnet": {
@@ -1982,6 +2094,19 @@
             },
             "python": {
               "module": "aws_cdk.aws_panorama"
+            }
+          }
+        },
+        "aws-cdk-lib.aws_personalize": {
+          "targets": {
+            "dotnet": {
+              "namespace": "Amazon.CDK.AWS.Personalize"
+            },
+            "java": {
+              "package": "software.amazon.awscdk.services.personalize"
+            },
+            "python": {
+              "module": "aws_cdk.aws_personalize"
             }
           }
         },
@@ -2609,6 +2734,19 @@
             }
           }
         },
+        "aws-cdk-lib.aws_voiceid": {
+          "targets": {
+            "dotnet": {
+              "namespace": "Amazon.CDK.AWS.VoiceID"
+            },
+            "java": {
+              "package": "software.amazon.awscdk.services.voiceid"
+            },
+            "python": {
+              "module": "aws_cdk.aws_voiceid"
+            }
+          }
+        },
         "aws-cdk-lib.aws_waf": {
           "targets": {
             "dotnet": {
@@ -2803,6 +2941,19 @@
               "module": "aws_cdk.region_info"
             }
           }
+        },
+        "aws-cdk-lib.triggers": {
+          "targets": {
+            "dotnet": {
+              "namespace": "Amazon.CDK.Triggers"
+            },
+            "java": {
+              "package": "software.amazon.awscdk.triggers"
+            },
+            "python": {
+              "module": "aws_cdk.triggers"
+            }
+          }
         }
       },
       "targets": {
@@ -2862,7 +3013,7 @@
     "stability": "experimental"
   },
   "homepage": "https://github.com/enfogroup/sniffles-cdk.git",
-  "jsiiVersion": "1.56.0 (build 55e7d15)",
+  "jsiiVersion": "1.59.0 (build eb02c92)",
   "license": "MIT",
   "metadata": {
     "jsii": {
@@ -3095,7 +3246,7 @@
         },
         "locationInModule": {
           "filename": "lib/opsGenie/index.ts",
-          "line": 36
+          "line": 37
         },
         "parameters": [
           {
@@ -3121,7 +3272,7 @@
       "kind": "class",
       "locationInModule": {
         "filename": "lib/opsGenie/index.ts",
-        "line": 35
+        "line": 36
       },
       "name": "OpsGenieForwarder",
       "symbolId": "lib/opsGenie/index:OpsGenieForwarder"
@@ -3137,7 +3288,7 @@
       "kind": "interface",
       "locationInModule": {
         "filename": "lib/opsGenie/index.ts",
-        "line": 16
+        "line": 17
       },
       "name": "OpsGenieForwarderProps",
       "properties": [
@@ -3150,7 +3301,7 @@
           "immutable": true,
           "locationInModule": {
             "filename": "lib/opsGenie/index.ts",
-            "line": 24
+            "line": 25
           },
           "name": "cloudWatchTopic",
           "type": {
@@ -3167,7 +3318,7 @@
           "immutable": true,
           "locationInModule": {
             "filename": "lib/opsGenie/index.ts",
-            "line": 28
+            "line": 29
           },
           "name": "errorLogTopic",
           "type": {
@@ -3183,7 +3334,7 @@
           "immutable": true,
           "locationInModule": {
             "filename": "lib/opsGenie/index.ts",
-            "line": 20
+            "line": 21
           },
           "name": "opsGenieTopic",
           "type": {
@@ -3207,7 +3358,7 @@
         },
         "locationInModule": {
           "filename": "lib/sniffles.ts",
-          "line": 95
+          "line": 97
         },
         "parameters": [
           {
@@ -3234,7 +3385,7 @@
       "kind": "class",
       "locationInModule": {
         "filename": "lib/sniffles.ts",
-        "line": 81
+        "line": 83
       },
       "name": "Sniffles",
       "properties": [
@@ -3246,7 +3397,7 @@
           "immutable": true,
           "locationInModule": {
             "filename": "lib/sniffles.ts",
-            "line": 93
+            "line": 95
           },
           "name": "cloudWatchTopic",
           "type": {
@@ -3261,7 +3412,7 @@
           "immutable": true,
           "locationInModule": {
             "filename": "lib/sniffles.ts",
-            "line": 89
+            "line": 91
           },
           "name": "errorLogTopic",
           "type": {
@@ -3276,7 +3427,7 @@
           "immutable": true,
           "locationInModule": {
             "filename": "lib/sniffles.ts",
-            "line": 85
+            "line": 87
           },
           "name": "kinesisStream",
           "type": {
@@ -3297,7 +3448,7 @@
       "kind": "interface",
       "locationInModule": {
         "filename": "lib/sniffles.ts",
-        "line": 21
+        "line": 23
       },
       "name": "SnifflesProps",
       "properties": [
@@ -3310,7 +3461,7 @@
           "immutable": true,
           "locationInModule": {
             "filename": "lib/sniffles.ts",
-            "line": 58
+            "line": 60
           },
           "name": "cloudWatchTopic",
           "optional": true,
@@ -3327,7 +3478,7 @@
           "immutable": true,
           "locationInModule": {
             "filename": "lib/sniffles.ts",
-            "line": 48
+            "line": 50
           },
           "name": "errorLogTopic",
           "optional": true,
@@ -3339,12 +3490,12 @@
           "abstract": true,
           "docs": {
             "stability": "experimental",
-            "summary": "Regular expressions which will be used to exclude log messages from being matched Defaults to \"^$\" (no matches)."
+            "summary": "Regular expressions which will be used to exclude log messages from being matched Defaults to [\"^$\"] (no matches)."
           },
           "immutable": true,
           "locationInModule": {
             "filename": "lib/sniffles.ts",
-            "line": 43
+            "line": 45
           },
           "name": "filterExclusionPatterns",
           "optional": true,
@@ -3361,12 +3512,12 @@
           "abstract": true,
           "docs": {
             "stability": "experimental",
-            "summary": "Regular expressions which will be used to forward log messages For example '{ .level = \"error\" }' would match objects logged with key level and value \"error\" present Defaults to '{ .level === \"error\" }'."
+            "summary": "Regular expressions which will be used to forward log messages For example '{ .level = \"error\" }' would match objects logged with key level and value \"error\" present Defaults to ['{ .level === \"error\" }']."
           },
           "immutable": true,
           "locationInModule": {
             "filename": "lib/sniffles.ts",
-            "line": 38
+            "line": 40
           },
           "name": "filterInclusionPatterns",
           "optional": true,
@@ -3389,7 +3540,7 @@
           "immutable": true,
           "locationInModule": {
             "filename": "lib/sniffles.ts",
-            "line": 53
+            "line": 55
           },
           "name": "stream",
           "optional": true,
@@ -3401,12 +3552,12 @@
           "abstract": true,
           "docs": {
             "stability": "experimental",
-            "summary": "Regular expressions which will be used to exclude log groups from matching Defaults to \"^$\" (no matches)."
+            "summary": "Regular expressions which will be used to exclude log groups from matching Defaults to [\"^$\"] (no matches)."
           },
           "immutable": true,
           "locationInModule": {
             "filename": "lib/sniffles.ts",
-            "line": 32
+            "line": 34
           },
           "name": "subscriptionExclusionPatterns",
           "optional": true,
@@ -3423,12 +3574,12 @@
           "abstract": true,
           "docs": {
             "stability": "experimental",
-            "summary": "Regular expressions which will be used to match log groups For example \"^/aws/lambda/.*-prod-.*\" would match lambda log groups with \"-prod-\" in their names Defaults to \"^/aws/lambda/.*-prod-.*\"."
+            "summary": "Regular expressions which will be used to match log groups For example \"^/aws/lambda/.*-prod-.*\" would match lambda log groups with \"-prod-\" in their names Defaults to [\"^/aws/lambda/.*-prod-.*\"]."
           },
           "immutable": true,
           "locationInModule": {
             "filename": "lib/sniffles.ts",
-            "line": 27
+            "line": 29
           },
           "name": "subscriptionInclusionPatterns",
           "optional": true,
@@ -3446,5 +3597,5 @@
     }
   },
   "version": "0.0.1",
-  "fingerprint": "ld+5uzq3OnG51AFBBlrXGrPHSsRk6tdtyKKsgUpy20w="
+  "fingerprint": "BSv5G3S/t960ZJ5oS90oQwOcYhcsagl3Uol9C7G45cY="
 }
