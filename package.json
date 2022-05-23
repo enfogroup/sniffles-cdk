@@ -16,10 +16,11 @@
     "prepublishOnly": "npx pinst --disable",
     "postpublish": "npx pinst --enable",
     "postinstall": "npx husky install",
-    "build": "jsii",
+    "build": "npm run purge:prettier && npx jsii",
     "build:watch": "jsii --watch",
+    "purge:prettier": "rm -rf node_modules/@types/prettier",
     "package": "jsii-pacmak",
-    "clean": "rm -f lib/*.js lib/*.d.ts lib/opsGenie/*.js lib/opsGenie/*.d.ts test/*.js test/*.d.ts",
+    "clean": "rm -f lib/*.js lib/*.d.ts lib/*.d.ts.map lib/opsGenie/*.js lib/opsGenie/*.d.ts lib/opsGenie/*.d.ts.map test/*.js test/*.d.ts test/*.d.ts.map",
     "test": "npm run clean && jest --runInBand --coverage",
     "lint": "npx eslint --ext .ts .",
     "lint:fix": "npx eslint --fix --ext .ts ."
