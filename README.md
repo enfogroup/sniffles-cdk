@@ -12,7 +12,7 @@ npm install @enfo/sniffles
 
 ## Getting started
 
-Sniffles requires no configuration to get started, it is however recommend that inclusion and exclusion patterns for log groups and log filtering are modified to fulfil your needs.
+Sniffles requires no configuration to get started, it is however recommend that inclusion and exclusion patterns for log groups and log filtering are modified to fulfil your needs. Due to Sniffles using AWS KMS keys for some of its resources you have to specify account and region when defining your stack, you can read about it [here](https://docs.aws.amazon.com/cdk/v2/guide/environments.html).
 
 ### How it works
 
