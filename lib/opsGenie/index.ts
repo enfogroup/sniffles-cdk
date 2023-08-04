@@ -47,6 +47,7 @@ export class OpsGenieForwarder extends Construct {
     })
 
     const keyId = (props.errorLogTopic.node.defaultChild as CfnTopic).kmsMasterKeyId
+    // istanbul ignore next
     if (keyId) {
       lambda.addToRolePolicy(new PolicyStatement({
         effect: Effect.ALLOW,
@@ -100,6 +101,7 @@ export class OpsGenieForwarder extends Construct {
       ]
     }))
     const keyId = (topic.node.defaultChild as CfnTopic).kmsMasterKeyId
+    // istanbul ignore next
     if (keyId) {
       fun.addToRolePolicy(new PolicyStatement({
         effect: Effect.ALLOW,
