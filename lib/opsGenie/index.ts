@@ -106,7 +106,8 @@ export class OpsGenieForwarder extends Construct {
       fun.addToRolePolicy(new PolicyStatement({
         effect: Effect.ALLOW,
         actions: [
-          'kms:Encrypt'
+          'kms:Encrypt',
+          'kms:GenerateDataKey*'
         ],
         resources: [
           `arn:aws:kms:${Stack.of(this).region}:${Stack.of(this).account}:key/${keyId}`
