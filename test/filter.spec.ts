@@ -34,7 +34,7 @@ describe('Filter lambda', () => {
         jest.spyOn(filter, 'getInclusionPatterns').mockResolvedValue(['{ .level === "error" }']),
         jest.spyOn(filter, 'getExclusionPatterns').mockResolvedValue(['^$'])
       ]
-      const publishLogMock = jest.spyOn(filter, 'publishLog').mockResolvedValue()
+      const publishLogMock = jest.spyOn(filter, 'publishLog').mockResolvedValue(undefined)
 
       const output = await filter.handler(input)
 
@@ -51,7 +51,7 @@ describe('Filter lambda', () => {
         jest.spyOn(filter, 'getInclusionPatterns').mockResolvedValue(['{ .level === "error" }']),
         jest.spyOn(filter, 'getExclusionPatterns').mockResolvedValue(['^$'])
       ]
-      const publishLogMock = jest.spyOn(filter, 'publishLog').mockResolvedValue()
+      const publishLogMock = jest.spyOn(filter, 'publishLog').mockResolvedValue(undefined)
 
       const output = await filter.handler(input)
 
@@ -69,7 +69,7 @@ describe('Filter lambda', () => {
         jest.spyOn(filter, 'getInclusionPatterns').mockResolvedValue(['{ .level === "error" }']),
         jest.spyOn(filter, 'getExclusionPatterns').mockResolvedValue(['^$'])
       ]
-      const publishLogMock = jest.spyOn(filter, 'publishLog').mockResolvedValue()
+      const publishLogMock = jest.spyOn(filter, 'publishLog').mockResolvedValue(undefined)
 
       const output = await filter.handler(input)
 
@@ -84,7 +84,7 @@ describe('Filter lambda', () => {
         jest.spyOn(filter, 'getInclusionPatterns').mockResolvedValue(['{ .level === "error" }']),
         jest.spyOn(filter, 'getExclusionPatterns').mockResolvedValue(['{ .b === 4711 }'])
       ]
-      const publishLogMock = jest.spyOn(filter, 'publishLog').mockResolvedValue()
+      const publishLogMock = jest.spyOn(filter, 'publishLog').mockResolvedValue(undefined)
 
       const output = await filter.handler(input)
 
@@ -101,7 +101,7 @@ describe('Filter lambda', () => {
         jest.spyOn(filter, 'getInclusionPatterns').mockResolvedValue(['/ERROR/']),
         jest.spyOn(filter, 'getExclusionPatterns').mockResolvedValue(['^$'])
       ]
-      const publishLogMock = jest.spyOn(filter, 'publishLog').mockResolvedValue()
+      const publishLogMock = jest.spyOn(filter, 'publishLog').mockResolvedValue(undefined)
 
       const output = await filter.handler(input)
 

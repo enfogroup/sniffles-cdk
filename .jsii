@@ -7,7 +7,7 @@
     ]
   },
   "bundled": {
-    "@enfo/aws-secrets": "^2.2.1",
+    "@enfo/aws-secrets": "^3.0.0",
     "@enfo/env-vars": "^1.0.0",
     "aws-lambda": "^1.0.7",
     "fp-ts": "^2.11.9",
@@ -3740,7 +3740,7 @@
         },
         "locationInModule": {
           "filename": "lib/opsGenie/index.ts",
-          "line": 37
+          "line": 38
         },
         "parameters": [
           {
@@ -3766,7 +3766,7 @@
       "kind": "class",
       "locationInModule": {
         "filename": "lib/opsGenie/index.ts",
-        "line": 36
+        "line": 37
       },
       "name": "OpsGenieForwarder",
       "symbolId": "lib/opsGenie/index:OpsGenieForwarder"
@@ -3782,7 +3782,7 @@
       "kind": "interface",
       "locationInModule": {
         "filename": "lib/opsGenie/index.ts",
-        "line": 17
+        "line": 18
       },
       "name": "OpsGenieForwarderProps",
       "properties": [
@@ -3795,7 +3795,7 @@
           "immutable": true,
           "locationInModule": {
             "filename": "lib/opsGenie/index.ts",
-            "line": 25
+            "line": 26
           },
           "name": "cloudWatchTopic",
           "type": {
@@ -3812,7 +3812,7 @@
           "immutable": true,
           "locationInModule": {
             "filename": "lib/opsGenie/index.ts",
-            "line": 29
+            "line": 30
           },
           "name": "errorLogTopic",
           "type": {
@@ -3828,7 +3828,7 @@
           "immutable": true,
           "locationInModule": {
             "filename": "lib/opsGenie/index.ts",
-            "line": 21
+            "line": 22
           },
           "name": "opsGenieTopic",
           "type": {
@@ -4091,5 +4091,5 @@
     }
   },
   "version": "0.0.1",
-  "fingerprint": "FiQcBTuTafZzYOEbxxXKvld9Atgc7afhok3w2IIbdQo="
+  "fingerprint": "UcHlunfcZEQu+RH8fdYVvac4JYYTM1zB6QVgRYkhdXk="
 }
