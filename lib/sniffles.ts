@@ -297,8 +297,8 @@ export class Sniffles extends Construct {
       ]
     }))
 
-    const keyId = (props.snsTopic.node.defaultChild as CfnTopic).kmsMasterKeyId
-    if (keyId) {
+    const keyArn = (props.snsTopic.node.defaultChild as CfnTopic).kmsMasterKeyId
+    if (keyArn) {
       fun.addToRolePolicy(new PolicyStatement({
         effect: Effect.ALLOW,
         actions: [
@@ -306,7 +306,7 @@ export class Sniffles extends Construct {
           'kms:GenerateDataKey*'
         ],
         resources: [
-          `arn:aws:kms:${Stack.of(this).region}:${Stack.of(this).account}:key/${keyId}`
+          keyArn
         ]
       }))
     }

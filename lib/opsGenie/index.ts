@@ -1,4 +1,4 @@
-import { Duration, Stack } from 'aws-cdk-lib'
+import { Duration } from 'aws-cdk-lib'
 import { Effect, PolicyStatement } from 'aws-cdk-lib/aws-iam'
 import { SnsEventSource } from 'aws-cdk-lib/aws-lambda-event-sources'
 import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs'
@@ -46,9 +46,9 @@ export class OpsGenieForwarder extends Construct {
       topic: props.cloudWatchTopic
     })
 
-    const keyId = (props.errorLogTopic.node.defaultChild as CfnTopic).kmsMasterKeyId
+    const keyArn = (props.errorLogTopic.node.defaultChild as CfnTopic).kmsMasterKeyId
     // istanbul ignore next
-    if (keyId) {
+    if (keyArn) {
       lambda.addToRolePolicy(new PolicyStatement({
         effect: Effect.ALLOW,
         actions: [
@@ -56,7 +56,7 @@ export class OpsGenieForwarder extends Construct {
           'kms:DescribeKey'
         ],
         resources: [
-          `arn:aws:kms:${Stack.of(this).region}:${Stack.of(this).account}:key/${keyId}`
+          keyArn
         ]
       }))
     }
@@ -100,9 +100,9 @@ export class OpsGenieForwarder extends Construct {
         topic.topicArn
       ]
     }))
-    const keyId = (topic.node.defaultChild as CfnTopic).kmsMasterKeyId
+    const keyArn = (topic.node.defaultChild as CfnTopic).kmsMasterKeyId
     // istanbul ignore next
-    if (keyId) {
+    if (keyArn) {
       fun.addToRolePolicy(new PolicyStatement({
         effect: Effect.ALLOW,
         actions: [
@@ -110,7 +110,7 @@ export class OpsGenieForwarder extends Construct {
           'kms:GenerateDataKey*'
         ],
         resources: [
-          `arn:aws:kms:${Stack.of(this).region}:${Stack.of(this).account}:key/${keyId}`
+          keyArn
         ]
       }))
     }
