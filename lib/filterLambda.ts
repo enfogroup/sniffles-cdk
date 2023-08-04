@@ -8,7 +8,7 @@ import { apply as jspathApply } from 'jspath'
 // @ts-ignore
 import { anyPass, both, chain, cond, endsWith, filter, flip, gt, head, ifElse, includes, isEmpty, length, map, match, path, pathSatisfies, pipe, prop, startsWith, T, tail, tap, test, toString, trim, reject } from 'ramda'
 import { gunzipSync } from 'zlib'
-const SNS = require('aws-sdk/clients/sns')
+import { PublishCommand, SNSClient } from '@aws-sdk/client-sns'
 
 export interface LogEvent {
   readonly id: string
@@ -56,7 +56,7 @@ const ssmCache = new SSMCache({
   region: awsRegion,
   defaultTTL: 300
 })
-const sns = new SNS()
+const sns = new SNSClient({})
 // istanbul ignore next
 export const getInclusionPatterns = () =>
   ssmCache.getStringListParameter({ Name: inclusions })
@@ -103,10 +103,10 @@ const parseRecord = pipe<any, string, Buffer, Buffer, string, LogMessage, LogMes
 
 // istanbul ignore next
 export const publishLog = async (log: object) => {
-  await sns.publish({
+  await sns.send(new PublishCommand({
     TopicArn: topicArn,
     Message: JSON.stringify(log)
-  }).promise()
+  }))
 }
 
 export const

@@ -6,7 +6,7 @@ import { Duration, Stack } from 'aws-cdk-lib'
 import { StringListParameter } from 'aws-cdk-lib/aws-ssm'
 import { PolicyStatement, Role, ServicePrincipal } from 'aws-cdk-lib/aws-iam'
 import { RetentionDays } from 'aws-cdk-lib/aws-logs'
-import { StartingPosition } from 'aws-cdk-lib/aws-lambda'
+import { Runtime, StartingPosition } from 'aws-cdk-lib/aws-lambda'
 import { Topic } from 'aws-cdk-lib/aws-sns'
 import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs'
 import { QueueEncryption } from 'aws-cdk-lib/aws-sqs'
@@ -199,12 +199,13 @@ export class Sniffles extends Construct {
     const lambda = new NodejsFunction(this, 'SnifflesSubscribeLogGroups', {
       entry: join(__dirname, 'subscriptionLambda.ts'),
       handler: 'handler',
+      runtime: Runtime.NODEJS_18_X,
       memorySize: 128,
       timeout: Duration.seconds(900),
       logRetention: RetentionDays.ONE_YEAR,
       bundling: {
         minify: true,
-        externalModules: ['aws-sdk'],
+        externalModules: ['@aws-sdk/*'],
         sourceMap: false
       },
       environment: {
@@ -252,12 +253,13 @@ export class Sniffles extends Construct {
     const lambda = new NodejsFunction(this, 'SnifflesFilterLogs', {
       entry: join(__dirname, 'filterLambda.ts'),
       handler: 'handler',
+      runtime: Runtime.NODEJS_18_X,
       memorySize: 128,
       timeout: Duration.seconds(30),
       logRetention: RetentionDays.ONE_YEAR,
       bundling: {
         minify: true,
-        externalModules: ['aws-sdk'],
+        externalModules: ['@aws-sdk/*'],
         sourceMap: false
       },
       environment: {

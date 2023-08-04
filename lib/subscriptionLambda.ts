@@ -1,16 +1,14 @@
-import { DescribeLogGroupsResponse, LogGroup } from 'aws-sdk/clients/cloudwatchlogs'
+import { DescribeLogGroupsResponse, LogGroup, CloudWatchLogsClient, DescribeLogGroupsCommand, PutSubscriptionFilterCommand } from '@aws-sdk/client-cloudwatch-logs'
 import { SSMCache } from '@enfo/aws-secrets'
 import { parseEnvString, parseVariables, VariableType } from '@enfo/env-vars'
 // @ts-ignore
 import { tap, map, trim, pipe, concat, anyPass, filter, reject } from 'ramda'
 
-const CloudWatchLogs = require('aws-sdk/clients/cloudwatchlogs')
-
 const ssmCache = new SSMCache({
   region: parseEnvString('AWS_REGION', 'eu-west-1'),
   defaultTTL: 300
 })
-const cwl = new CloudWatchLogs()
+const cwl = new CloudWatchLogsClient({})
 const { kinesisStream, inclusions, exclusions, cloudWatchRole } = parseVariables<{
   kinesisStream: string,
   inclusions: string,
@@ -62,7 +60,7 @@ const patternsToFunctions = map(
 )
 // istanbul ignore next
 const getLogGroups = (token?: string): Promise<LogGroup[]> =>
-  cwl.describeLogGroups({ nextToken: token }).promise()
+  cwl.send(new DescribeLogGroupsCommand({ nextToken: token }))
     .then(({ logGroups, nextToken }: DescribeLogGroupsResponse) =>
       !nextToken
         ? logGroups ?? []
@@ -92,14 +90,14 @@ export const filterLogGroups = ([logGroupNames, inclusionPatterns, exclusionPatt
   )(logGroupNames)
 // istanbul ignore next
 export const subscribeLogGroup = (logGroupName: string) =>
-  cwl.putSubscriptionFilter({
+  cwl.send(new PutSubscriptionFilterCommand({
     logGroupName,
     roleArn: cloudWatchRole,
     filterPattern: '',
     filterName: 'LogsToKinesis',
     destinationArn: kinesisStream,
     distribution: 'Random'
-  }).promise()
+  }))
     .catch(console.warn)
 
 export const handler = (): Promise<string | void> =>

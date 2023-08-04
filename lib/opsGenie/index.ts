@@ -10,6 +10,7 @@ import { join } from 'path'
 
 import { FunctionAlarms, QueueAlarms } from '../alarms'
 import { QueueEncryption } from 'aws-cdk-lib/aws-sqs'
+import { Runtime } from 'aws-cdk-lib/aws-lambda'
 
 /**
  * Properties needed when creating a new OpsGenieForwarder
@@ -62,12 +63,13 @@ export class OpsGenieForwarder extends Construct {
     const lambda = new NodejsFunction(this, 'Forwarder', {
       entry: join(__dirname, 'forwarderLambda.ts'),
       handler: 'handler',
+      runtime: Runtime.NODEJS_18_X,
       memorySize: 128,
       timeout: Duration.seconds(3),
       logRetention: RetentionDays.ONE_YEAR,
       bundling: {
         minify: true,
-        externalModules: ['aws-sdk'],
+        externalModules: ['@aws-sdk/*'],
         sourceMap: false
       },
       environment: {
