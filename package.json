@@ -16,9 +16,8 @@
     "prepublishOnly": "npx pinst --disable",
     "postpublish": "npx pinst --enable",
     "postinstall": "npx husky install",
-    "build": "npm run purge:prettier && npx jsii",
+    "build": "npx jsii",
     "build:watch": "jsii --watch",
-    "purge:prettier": "rm -rf node_modules/@types/prettier",
     "package": "jsii-pacmak",
     "clean": "rm -f lib/*.js lib/*.d.ts lib/*.d.ts.map lib/opsGenie/*.js lib/opsGenie/*.d.ts lib/opsGenie/*.d.ts.map test/*.js test/*.d.ts test/*.d.ts.map",
     "test": "npm run clean && jest --runInBand --coverage",
@@ -36,9 +35,9 @@
     "@typescript-eslint/eslint-plugin": "^6.2.1",
     "@typescript-eslint/parser": "^6.2.1",
     "aws-cdk": "^2.25.0",
-    "aws-cdk-lib": "^2.89.0",
+    "aws-cdk-lib": "2.89.0",
     "aws-sdk": "^2.1108.0",
-    "constructs": "^10.2.69",
+    "constructs": "10.2.69",
     "esbuild": "^0.14.34",
     "eslint": "^8.6.0",
     "eslint-config-standard": "^17.1.0",
@@ -48,7 +47,7 @@
     "eslint-plugin-promise": "^6.0.0",
     "husky": "^8.0.1",
     "jest": "^28.1.0",
-    "jsii": "^1.56.0",
+    "jsii": "^5.1.10",
     "jsii-pacmak": "^1.56.0",
     "pinst": "^3.0.0",
     "ts-jest": "^28.0.2",
@@ -72,8 +71,8 @@
     "ramda"
   ],
   "peerDependencies": {
-    "aws-cdk-lib": "^2.25.0",
-    "constructs": "^10.1.15"
+    "aws-cdk-lib": "^2.89.0",
+    "constructs": "^10.2.69"
   },
   "stability": "experimental",
   "jsii": {
