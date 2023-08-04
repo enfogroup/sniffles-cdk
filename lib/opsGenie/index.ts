@@ -8,7 +8,7 @@ import { Queue } from '@enfo/aws-cdkompliance'
 import { Construct } from 'constructs'
 import { join } from 'path'
 
-import { setupLambdaAlarms, setupQueueAlarms } from '../alarms'
+import { FunctionAlarms, QueueAlarms } from '../alarms'
 import { QueueEncryption } from 'aws-cdk-lib/aws-sqs'
 
 /**
@@ -40,10 +40,8 @@ export class OpsGenieForwarder extends Construct {
     const queue = this.setupDLQ(props.cloudWatchTopic)
     const lambda = this.setupLambda(props.opsGenieTopic, queue)
     lambda.addEventSource(new SnsEventSource(props.errorLogTopic))
-    setupLambdaAlarms({
-      idPrefix: 'OpsGenie',
-      stack: this,
-      lambda,
+    new FunctionAlarms(this, 'OpsGenieAlarms', {
+      fun: lambda,
       topic: props.cloudWatchTopic
     })
   }
@@ -53,9 +51,7 @@ export class OpsGenieForwarder extends Construct {
       retentionPeriod: Duration.days(14),
       encryption: QueueEncryption.KMS_MANAGED
     })
-    setupQueueAlarms({
-      stack: this,
-      id: 'DLQAlarms',
+    new QueueAlarms(this, 'DLQAlarms', {
       queue,
       topic
     })
