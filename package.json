@@ -34,13 +34,13 @@
     "@types/aws-lambda": "^8.10.93",
     "@types/jest": "^29.5.3",
     "@types/jspath": "^0.4.0",
-    "@types/node": "^17.0.7",
+    "@types/node": "^20.4.7",
     "@typescript-eslint/eslint-plugin": "^6.2.1",
     "@typescript-eslint/parser": "^6.2.1",
     "aws-cdk": "^2.25.0",
     "aws-cdk-lib": "2.89.0",
     "constructs": "10.2.69",
-    "esbuild": "^0.14.34",
+    "esbuild": "^0.18.17",
     "eslint": "^8.6.0",
     "eslint-config-standard": "^17.1.0",
     "eslint-plugin-import": "^2.25.4",
@@ -80,13 +80,5 @@
   "jsii": {
     "outdir": ".dist",
     "versionFormat": "full"
-  },
-  "bundleDependencies": [
-    "@enfo/aws-secrets",
-    "@enfo/env-vars",
-    "aws-lambda",
-    "fp-ts",
-    "jspath",
-    "ramda"
-  ]
+  }
 }
