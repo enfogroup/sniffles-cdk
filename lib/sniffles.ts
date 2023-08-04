@@ -302,6 +302,7 @@ export class Sniffles extends Construct {
       fun.addToRolePolicy(new PolicyStatement({
         effect: Effect.ALLOW,
         actions: [
+          'kms:Decrypt',
           'kms:Encrypt',
           'kms:GenerateDataKey*'
         ],
