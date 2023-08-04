@@ -148,3 +148,7 @@ Explanation of components:
 ### Writing your own forwarder
 
 Writing your own Forwarder is easy. Check the [Sniffles source code](https://github.com/enfogroup/sniffles-cdk) for guidance.
+
+### Known issues
+
+If no SNS Topics are supplied to the Sniffles construct the AWS Managed KMS Key for SNS will be used (alias/aws/sns). The AWS Managed KMS Keys are only created when needed. If the Key does not exist deployment of Sniffles will fail. You can generate the necessary Key in a region by using the AWS console, starting the process of creating an SNS topic and opening the Encryption section. This will force the Key to be generated. Please note that AWS Managed KMS Keys are regional.

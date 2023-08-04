@@ -93,18 +93,18 @@ export class Sniffles extends Construct {
    * Topic which all internal Sniffles logic alarms will be pushed to
    */
   readonly cloudWatchTopic: Topic
+
+  #defaultSnsKey: IKey | undefined
+
   // istanbul ignore next
   constructor (scope: Construct, id: string, props?: SnifflesProps) {
     super(scope, id)
 
     this.kinesisStream = this.setupKinesisStream(props?.stream)
     const role = this.setupRoleForCloudWatch(this.kinesisStream)
-    const defaultSnsKey = Key.fromLookup(this, 'DefaultSnsKey', {
-      aliasName: 'alias/aws/sns'
-    })
 
-    this.errorLogTopic = this.setupSnsTopic('FilterLogsTopic', defaultSnsKey, props?.errorLogTopic)
-    this.cloudWatchTopic = this.setupSnsTopic('CloudWatchTopic', defaultSnsKey, props?.cloudWatchTopic)
+    this.errorLogTopic = this.setupSnsTopic('FilterLogsTopic', props?.errorLogTopic)
+    this.cloudWatchTopic = this.setupSnsTopic('CloudWatchTopic', props?.cloudWatchTopic)
 
     const subscriptionLambda = this.subscriptionLambda({
       kinesisStream: this.kinesisStream,
@@ -174,12 +174,19 @@ export class Sniffles extends Construct {
     return role
   }
 
-  private setupSnsTopic (id: string, masterKey: IKey, existingTopic?: Topic): Topic {
+  private getDefaultSnsKey (): IKey {
+    this.#defaultSnsKey ??= Key.fromLookup(this, 'DefaultSnsKey', {
+      aliasName: 'alias/aws/sns'
+    })
+    return this.#defaultSnsKey
+  }
+
+  private setupSnsTopic (id: string, existingTopic?: Topic): Topic {
     if (existingTopic) {
       return existingTopic
     }
     return new CompliantTopic(this, id, {
-      masterKey
+      masterKey: this.getDefaultSnsKey()
     })
   }
 
