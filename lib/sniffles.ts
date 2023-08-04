@@ -13,9 +13,9 @@ import { QueueEncryption } from 'aws-cdk-lib/aws-sqs'
 import { Queue, Topic as CompliantTopic } from '@enfo/aws-cdkompliance'
 import { Rule, Schedule } from 'aws-cdk-lib/aws-events'
 import { LambdaFunction } from 'aws-cdk-lib/aws-events-targets'
-
-import { setupLambdaAlarms, setupQueueAlarms } from './alarms'
 import { IKey, Key } from 'aws-cdk-lib/aws-kms'
+
+import { QueueAlarms, FunctionAlarms } from './alarms'
 
 /**
  * Properties needed to create a new Sniffles instance
@@ -112,11 +112,9 @@ export class Sniffles extends Construct {
       exclusionPatterns: this.setupLogGroupExclusionPatterns(props?.subscriptionExclusionPatterns),
       cloudWatchRole: role
     })
-    setupLambdaAlarms({
-      stack: this,
-      lambda: subscriptionLambda,
-      topic: this.cloudWatchTopic,
-      idPrefix: 'Subscription'
+    new FunctionAlarms(this, 'SubscriptionAlarms', {
+      fun: subscriptionLambda,
+      topic: this.cloudWatchTopic
     })
 
     const filterDLQ = this.setupFilterDLQ(this.cloudWatchTopic)
@@ -127,11 +125,9 @@ export class Sniffles extends Construct {
       snsTopic: this.errorLogTopic,
       deadLetterQueue: filterDLQ
     })
-    setupLambdaAlarms({
-      stack: this,
-      lambda: filterLambda,
-      topic: this.cloudWatchTopic,
-      idPrefix: 'Filter'
+    new FunctionAlarms(this, 'FilterAlarms', {
+      fun: filterLambda,
+      topic: this.cloudWatchTopic
     })
   }
 
@@ -192,9 +188,7 @@ export class Sniffles extends Construct {
       retentionPeriod: Duration.days(14),
       encryption: QueueEncryption.KMS_MANAGED
     })
-    setupQueueAlarms({
-      stack: this,
-      id: 'DLQAlarm',
+    new QueueAlarms(this, 'DLQAlarms', {
       queue,
       topic
     })
