@@ -1,9 +1,9 @@
-import { Duration } from 'aws-cdk-lib'
-import { PolicyStatement } from 'aws-cdk-lib/aws-iam'
+import { Duration, Stack } from 'aws-cdk-lib'
+import { Effect, PolicyStatement } from 'aws-cdk-lib/aws-iam'
 import { SnsEventSource } from 'aws-cdk-lib/aws-lambda-event-sources'
 import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs'
 import { RetentionDays } from 'aws-cdk-lib/aws-logs'
-import { Topic } from 'aws-cdk-lib/aws-sns'
+import { CfnTopic, Topic } from 'aws-cdk-lib/aws-sns'
 import { Queue } from '@enfo/aws-cdkompliance'
 import { Construct } from 'constructs'
 import { join } from 'path'
@@ -39,12 +39,26 @@ export class OpsGenieForwarder extends Construct {
     super(scope, id)
 
     const queue = this.setupDLQ(props.cloudWatchTopic)
-    const lambda = this.setupLambda(props.opsGenieTopic, queue)
+    const lambda = this.setupFunction(props.opsGenieTopic, queue)
     lambda.addEventSource(new SnsEventSource(props.errorLogTopic))
     new FunctionAlarms(this, 'OpsGenieAlarms', {
       fun: lambda,
       topic: props.cloudWatchTopic
     })
+
+    const keyId = (props.errorLogTopic.node.defaultChild as CfnTopic).kmsMasterKeyId
+    if (keyId) {
+      lambda.addToRolePolicy(new PolicyStatement({
+        effect: Effect.ALLOW,
+        actions: [
+          'kms:Decrypt',
+          'kms:DescribeKey'
+        ],
+        resources: [
+          `arn:aws:kms:${Stack.of(this).region}:${Stack.of(this).account}:key/${keyId}`
+        ]
+      }))
+    }
   }
 
   private setupDLQ (topic: Topic): Queue {
@@ -59,8 +73,8 @@ export class OpsGenieForwarder extends Construct {
     return queue
   }
 
-  private setupLambda (topic: Topic, queue: Queue): NodejsFunction {
-    const lambda = new NodejsFunction(this, 'Forwarder', {
+  private setupFunction (topic: Topic, queue: Queue): NodejsFunction {
+    const fun = new NodejsFunction(this, 'Forwarder', {
       entry: join(__dirname, 'forwarderLambda.ts'),
       handler: 'handler',
       runtime: Runtime.NODEJS_18_X,
@@ -77,8 +91,7 @@ export class OpsGenieForwarder extends Construct {
       },
       deadLetterQueue: queue
     })
-
-    lambda.addToRolePolicy(new PolicyStatement({
+    fun.addToRolePolicy(new PolicyStatement({
       actions: [
         'sns:Publish'
       ],
@@ -86,6 +99,18 @@ export class OpsGenieForwarder extends Construct {
         topic.topicArn
       ]
     }))
-    return lambda
+    const keyId = (topic.node.defaultChild as CfnTopic).kmsMasterKeyId
+    if (keyId) {
+      fun.addToRolePolicy(new PolicyStatement({
+        effect: Effect.ALLOW,
+        actions: [
+          'kms:Encrypt'
+        ],
+        resources: [
+          `arn:aws:kms:${Stack.of(this).region}:${Stack.of(this).account}:key/${keyId}`
+        ]
+      }))
+    }
+    return fun
   }
 }
