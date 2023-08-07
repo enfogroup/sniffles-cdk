@@ -16,7 +16,7 @@ Sniffles requires no configuration to get started, it is however recommend that 
 
 ### How it works
 
-Sniffles uses a lambda to subscribe log groups matching regular expressions to a Kinesis stream. Log lines are then processed by a lambda which uses regular expressions to evaluate if something is an error. Errors are published to an SNS topic which in turn can have subscriptions to services such as OpsGenie.
+Sniffles uses a Lambda Function to subscribe log groups matching regular expressions to a Kinesis stream. Log lines are then processed by a Lambda Function which uses regular expressions to evaluate if something is an error. Errors are published to an SNS topic which in turn can have subscriptions to services such as OpsGenie.
 
 ### Simple example
 
@@ -85,18 +85,18 @@ The Sniffles architecture is self contained and written to report internal error
 
 Explanation of components:
 
-* Subscriptions lambda. Runs every 15 minutes looking for log groups to subscribe
-* CloudWatch topic. Any internal error such as lambdas crashing, unprocessable events etc will be published to this topic
+* Subscriptions Lambda Function. Runs every 15 minutes looking for log groups to subscribe
+* CloudWatch topic. Any internal error such as Lambda Functions crashing, unprocessable events etc will be published to this topic
 * Kinesis stream. Used to process everything logged
-* Filter lambda. Receives all log lines and forwards those matching the error patterns to the Error Log Topic
+* Filter Lambda Function. Receives all log lines and forwards those matching the error patterns to the Error Log Topic
 * Error Log topic. Receives all log lines considered to be errors
-* SSM parameters. Used to store config for lambdas
-* Queue. DLQ for Filter lambda
+* SSM parameters. Used to store config for Lambda Functions
+* Queue. DLQ for Filter Lambda Function
 
 
 ## OpsGenie
 
-Anything matched by the Filter lambda will end up on the Error Log topic. You can use the OpsGenieForwarder Construct to format OpsGenie Alerts and forward them to OpsGenie. The OpsGenieForwarder makes assumptions about the logged format. If you are using a different format you can always write your own Forwarder.
+Anything matched by the Filter Lambda Function will end up on the Error Log topic. You can use the OpsGenieForwarder Construct to format OpsGenie Alerts and forward them to OpsGenie. The OpsGenieForwarder makes assumptions about the logged format. If you are using a different format you can always write your own Forwarder.
 
 ```typescript
 new OpsGenieForwarder(this, 'OpsGenie', {
@@ -139,11 +139,11 @@ The OpsGenieForwarder is self contained and written to report internal errors th
 
 Explanation of components:
 
-* Forwarder lambda. Receives an error log line, formats it and forwards to an SNS topic
-* Error Log topic. Used to invoke Forwarder lambda
-* CloudWatch topic. Any internal error such as lambdas crashing, unprocessable events etc will be published to this topics
+* Forwarder Lambda Function. Receives an error log line, formats it and forwards to an SNS topic
+* Error Log topic. Used to invoke Forwarder Lambda Function
+* CloudWatch topic. Any internal error such as Lambda Functions crashing, unprocessable events etc will be published to this topics
 * OpsGenie topic. Used to publish formatted log lines
-* Queue. DLQ for Forwarder lambda
+* Queue. DLQ for Forwarder Lambda Function
 
 ### Writing your own forwarder
 
