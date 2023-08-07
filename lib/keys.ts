@@ -1,10 +1,10 @@
-import { Key } from '@enfo/aws-cdkompliance'
+import { Key as CompliantKey } from '@enfo/aws-cdkompliance'
 import { Effect, PolicyStatement, ServicePrincipal } from 'aws-cdk-lib/aws-iam'
-import { IKey, KeyProps } from 'aws-cdk-lib/aws-kms'
+import { IKey, Key } from 'aws-cdk-lib/aws-kms'
 import { Construct } from 'constructs'
 
 export interface CloudWatchKeyAccessRightsProps {
-  key: IKey
+  readonly key: IKey
 }
 
 export class CloudWatchKeyAccessRights extends Construct {
@@ -43,7 +43,7 @@ export class CloudWatchKeyAccessRights extends Construct {
 }
 
 export interface LogsKeyAccessRightsProps {
-  key: IKey
+  readonly key: IKey
 }
 
 export class LogsKeyAccessRights extends Construct {
@@ -81,16 +81,20 @@ export class LogsKeyAccessRights extends Construct {
   }
 }
 
-export class SnifflesKey extends Key {
-  constructor (scope: Construct, id: string, props: KeyProps) {
-    super(scope, id, props)
+export class SnifflesKey extends Construct {
+  public readonly key: Key
+
+  constructor (scope: Construct, id: string) {
+    super(scope, id)
+
+    this.key = new CompliantKey(this, 'Key')
 
     new CloudWatchKeyAccessRights(scope, 'CloudWatchAccessRights', {
-      key: this
+      key: this.key
     })
 
     new LogsKeyAccessRights(scope, 'LogsAccessRights', {
-      key: this
+      key: this.key
     })
   }
 }
