@@ -4,10 +4,10 @@ import { Construct } from 'constructs'
 import { Stream, StreamEncryption } from 'aws-cdk-lib/aws-kinesis'
 import { Duration, Stack } from 'aws-cdk-lib'
 import { StringListParameter } from 'aws-cdk-lib/aws-ssm'
-import { PolicyStatement, Role, ServicePrincipal } from 'aws-cdk-lib/aws-iam'
+import { Effect, PolicyStatement, Role, ServicePrincipal } from 'aws-cdk-lib/aws-iam'
 import { RetentionDays } from 'aws-cdk-lib/aws-logs'
 import { Runtime, StartingPosition } from 'aws-cdk-lib/aws-lambda'
-import { Topic } from 'aws-cdk-lib/aws-sns'
+import { CfnTopic, Topic } from 'aws-cdk-lib/aws-sns'
 import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs'
 import { QueueEncryption } from 'aws-cdk-lib/aws-sqs'
 import { Queue, Topic as CompliantTopic } from '@enfo/aws-cdkompliance'
@@ -118,7 +118,7 @@ export class Sniffles extends Construct {
     })
 
     const filterDLQ = this.setupFilterDLQ(this.cloudWatchTopic)
-    const filterLambda = this.setupFilterLambda({
+    const filterLambda = this.setupFilterFunction({
       kinesisStream: this.kinesisStream,
       inclusionPatterns: this.setupFilterLogsInclusionPatterns(props?.filterInclusionPatterns),
       exclusionPatterns: this.setupFilterLogsExclusionPatterns(props?.filterExclusionPatterns),
@@ -256,8 +256,8 @@ export class Sniffles extends Construct {
     return lambda
   }
 
-  private setupFilterLambda (props: SetupFilterLambdaProps): NodejsFunction {
-    const lambda = new NodejsFunction(this, 'SnifflesFilterLogs', {
+  private setupFilterFunction (props: SetupFilterLambdaProps): NodejsFunction {
+    const fun = new NodejsFunction(this, 'SnifflesFilterLogs', {
       entry: join(__dirname, 'filterLambda.ts'),
       handler: 'handler',
       runtime: Runtime.NODEJS_18_X,
@@ -277,7 +277,7 @@ export class Sniffles extends Construct {
       deadLetterQueue: props.deadLetterQueue
     })
 
-    lambda.addEventSourceMapping('FilterLambdaSourceMapping', {
+    fun.addEventSourceMapping('FilterLambdaSourceMapping', {
       eventSourceArn: props.kinesisStream.streamArn,
       batchSize: 10,
       maxBatchingWindow: Duration.seconds(10),
@@ -286,9 +286,9 @@ export class Sniffles extends Construct {
       startingPosition: StartingPosition.LATEST
     })
 
-    props.kinesisStream.grantRead(lambda)
+    props.kinesisStream.grantRead(fun)
 
-    lambda.addToRolePolicy(new PolicyStatement({
+    fun.addToRolePolicy(new PolicyStatement({
       actions: [
         'sns:Publish'
       ],
@@ -297,7 +297,22 @@ export class Sniffles extends Construct {
       ]
     }))
 
-    lambda.addToRolePolicy(new PolicyStatement({
+    const keyArn = (props.snsTopic.node.defaultChild as CfnTopic).kmsMasterKeyId
+    if (keyArn) {
+      fun.addToRolePolicy(new PolicyStatement({
+        effect: Effect.ALLOW,
+        actions: [
+          'kms:Decrypt',
+          'kms:Encrypt',
+          'kms:GenerateDataKey*'
+        ],
+        resources: [
+          keyArn
+        ]
+      }))
+    }
+
+    fun.addToRolePolicy(new PolicyStatement({
       actions: [
         'ssm:GetParameter'
       ],
@@ -307,6 +322,6 @@ export class Sniffles extends Construct {
       ]
     }))
 
-    return lambda
+    return fun
   }
 }
