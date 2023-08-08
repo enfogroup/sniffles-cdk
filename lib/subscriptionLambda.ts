@@ -3,6 +3,7 @@ import { SSMCache } from '@enfo/aws-secrets'
 import { parseEnvString, parseVariables, VariableType } from '@enfo/env-vars'
 // @ts-ignore
 import { tap, map, trim, pipe, concat, anyPass, filter, reject } from 'ramda'
+import pLimit from 'p-limit'
 
 const ssmCache = new SSMCache({
   region: parseEnvString('AWS_REGION', 'eu-west-1'),
@@ -88,17 +89,21 @@ export const filterLogGroups = ([logGroupNames, inclusionPatterns, exclusionPatt
     filter(anyPass(patternsToFunctions(inclusionPatterns))),
     reject(anyPass(patternsToFunctions(exclusionPatterns)))
   )(logGroupNames)
+
+const limit = pLimit(1)
 // istanbul ignore next
 export const subscribeLogGroup = (logGroupName: string) =>
-  cwl.send(new PutSubscriptionFilterCommand({
-    logGroupName,
-    roleArn: cloudWatchRole,
-    filterPattern: '',
-    filterName: 'LogsToKinesis',
-    destinationArn: kinesisStream,
-    distribution: 'Random'
-  }))
-    .catch(console.warn)
+  limit(() =>
+    cwl.send(new PutSubscriptionFilterCommand({
+      logGroupName,
+      roleArn: cloudWatchRole,
+      filterPattern: '',
+      filterName: 'LogsToKinesis',
+      destinationArn: kinesisStream,
+      distribution: 'Random'
+    }))
+      .catch(console.warn)
+  )
 
 export const handler = (): Promise<string | void> =>
   getLogGroupsAndPatterns()
