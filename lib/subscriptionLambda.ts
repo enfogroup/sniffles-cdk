@@ -88,23 +88,28 @@ export const filterLogGroups = ([logGroupNames, inclusionPatterns, exclusionPatt
     filter(anyPass(patternsToFunctions(inclusionPatterns))),
     reject(anyPass(patternsToFunctions(exclusionPatterns)))
   )(logGroupNames)
+
 // istanbul ignore next
 export const subscribeLogGroup = (logGroupName: string) =>
-  cwl.send(new PutSubscriptionFilterCommand({
-    logGroupName,
-    roleArn: cloudWatchRole,
-    filterPattern: '',
-    filterName: 'LogsToKinesis',
-    destinationArn: kinesisStream,
-    distribution: 'Random'
-  }))
-    .catch(console.warn)
+  () =>
+    cwl.send(new PutSubscriptionFilterCommand({
+      logGroupName,
+      roleArn: cloudWatchRole,
+      filterPattern: '',
+      filterName: 'LogsToKinesis',
+      destinationArn: kinesisStream,
+      distribution: 'Random'
+    }))
+      .then(() => console.log(`Handled ${logGroupName}`))
+      .catch(console.warn)
+
+export const awaitInSequence = (functions: (() => Promise<void>)[]) => functions.reduce((p, fn) => p.then(fn), Promise.resolve())
 
 export const handler = (): Promise<string | void> =>
   getLogGroupsAndPatterns()
     .then(filterLogGroups)
     .then(tap(console.log))
     .then(map(subscribeLogGroup))
-    .then(Promise.all.bind(Promise))
+    .then(awaitInSequence)
     .then(() => 'OK')
     .catch(console.error)

@@ -1,6 +1,6 @@
 {
   "name": "@enfo/sniffles",
-  "version": "0.0.2",
+  "version": "0.0.4",
   "description": "Automatic formatting and forwarding of CloudWatch logs based alarms in AWS using the CDK",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",

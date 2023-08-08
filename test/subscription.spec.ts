@@ -12,7 +12,7 @@ describe('Subscription lambda', () => {
         ['^/aws/lambda/.*-prod-.*'],
         []
       ])
-      const subscribeMock = jest.spyOn(subscription, 'subscribeLogGroup').mockResolvedValue(undefined)
+      const subscribeMock = jest.spyOn(subscription, 'subscribeLogGroup').mockReturnValue(() => Promise.resolve())
 
       const output = await subscription.handler()
 
