@@ -3,7 +3,6 @@ import { SSMCache } from '@enfo/aws-secrets'
 import { parseEnvString, parseVariables, VariableType } from '@enfo/env-vars'
 // @ts-ignore
 import { tap, map, trim, pipe, concat, anyPass, filter, reject } from 'ramda'
-import pLimit from 'p-limit'
 
 const ssmCache = new SSMCache({
   region: parseEnvString('AWS_REGION', 'eu-west-1'),
@@ -90,10 +89,9 @@ export const filterLogGroups = ([logGroupNames, inclusionPatterns, exclusionPatt
     reject(anyPass(patternsToFunctions(exclusionPatterns)))
   )(logGroupNames)
 
-const limit = pLimit(1)
 // istanbul ignore next
 export const subscribeLogGroup = (logGroupName: string) =>
-  limit(() =>
+  () =>
     cwl.send(new PutSubscriptionFilterCommand({
       logGroupName,
       roleArn: cloudWatchRole,
@@ -102,14 +100,16 @@ export const subscribeLogGroup = (logGroupName: string) =>
       destinationArn: kinesisStream,
       distribution: 'Random'
     }))
+      .then(() => console.log(`Handled ${logGroupName}`))
       .catch(console.warn)
-  )
+
+export const awaitInSequence = (functions: (() => Promise<void>)[]) => functions.reduce((p, fn) => p.then(fn), Promise.resolve())
 
 export const handler = (): Promise<string | void> =>
   getLogGroupsAndPatterns()
     .then(filterLogGroups)
     .then(tap(console.log))
     .then(map(subscribeLogGroup))
-    .then(Promise.all.bind(Promise))
+    .then(awaitInSequence)
     .then(() => 'OK')
     .catch(console.error)
