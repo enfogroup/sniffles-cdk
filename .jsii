@@ -12,6 +12,7 @@
     "aws-lambda": "^1.0.7",
     "fp-ts": "^2.11.9",
     "jspath": "^0.4.0",
+    "p-limit": "^4.0.0",
     "ramda": "^0.28.0"
   },
   "dependencies": {
@@ -4309,5 +4310,5 @@
     }
   },
   "version": "0.0.2",
-  "fingerprint": "eErniUaa69shb++BNMeghZQuXtxZdBR8Hbo7xt6kQ9A="
+  "fingerprint": "g6NdhBWJc7BCzQivwy6GmHSdaHvgSmas18Q1dnicb4s="
 }
